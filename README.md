@@ -1,6 +1,6 @@
 UnoCart
 =======
-The UnoCart is an SD-card multicart for the Atari 8-bit, supporting ROMs,CARs,XEXs and some ATR files.
+The UnoCart is an SD-card multicart for the Atari 8-bit (XL & XE), supporting ROMs,CARs,XEXs and some ATR files.
 It is the little brother of the [Ultimate Cart](https://github.com/robinhedwards/UltimateCart/).
 
 The multicart is based on a STM32F4 microcontroller running at 168MHz. This is (just) fast enough to respond to requests
@@ -15,8 +15,9 @@ XEGS cartridges up to 128k in size, AtariMax 1mbit, Bounty Bob, OSS cartridges a
 
 XEX files (Atari executables) are also supported using a XEX loader built into the cartridge.
 
-The cartridge can also emulate a disk drive. It does this by installing a Soft OS into the Atari which then redirects
-D1: to the ATR file selected from the menu. Access for D2: upwards continue to be directed to the SIO port as normal.
+The cartridge can also emulate a disk drive on an Atari with with at least 64k. It does this by installing a Soft OS into
+the Atari which then redirects D1: to the ATR file selected from the menu. Access for D2: upwards continue to be directed
+to the SIO port as normal.
 Many games will not work, due to the soft OS technique used. However it is possible to boot to a DOS 2.5 ATR file,
 do some programming in BASIC and save your program back to the ATR file. ATR files up to 16Meg in size are supported.
 
