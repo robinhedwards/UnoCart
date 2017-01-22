@@ -36,3 +36,8 @@ Firmware
 --------
 The UnoCart firmware is open source under a GPL license and is hosted here.
 
+Credits
+-------
+* Design, hardware and firmware by Robin Edwards (electrotrains at atariage)
+* XEX loader and OS modifications by Jonathan Halliday (flashjazzcat at atariage)
+* Altirra LLE OS used with permision from Avery Lee (phaeron at atariage)
