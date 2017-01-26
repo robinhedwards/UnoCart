@@ -1253,10 +1253,9 @@ void feed_XEX_loader(void) {
 	GREEN_LED_OFF
 	uint16_t addr, data, c;
 	uint32_t bank = 0;
-	unsigned char *ramPtr;
+	unsigned char *ramPtr = &cart_ram1[0];
 	while (1)
 	{
-		ramPtr = &cart_ram1[0] + (bank * 256);
 		// wait for phi2 high
 		while (!((c = CONTROL_IN) & PHI2)) ;
 		if (!(c & CCTL)) {
@@ -1278,6 +1277,9 @@ void feed_XEX_loader(void) {
 					bank = (bank&0xFF00) | (data>>8);
 				else if (addr == 1)
 					bank = (bank&0x00FF) | (data & 0xFF00);
+
+				if (bank & 0xFF00) ramPtr = &cart_ram2[0]; else ramPtr = &cart_ram1[0];
+				ramPtr += 256 * (bank & 0x00FF);
 			}
 		}
 		else

@@ -240,25 +240,36 @@ dir_ok	jsr output_directory
 main_loop
 	jsr GetKey
 	beq main_loop
+	cmp #$1C ; cur up
+	beq up_pressed
 	cmp #'-'
+	beq up_pressed
+	
+	cmp #$1D ; cur down
+	beq down_pressed
+	cmp #'='
+	beq down_pressed
+	
+	cmp #'b'
 	bne _1
-	jmp up_pressed
-_1	cmp #'='
-	bne _2
-	jmp down_pressed
-_2	cmp #'b'
-	bne _3
 	jmp back_pressed
-_3	cmp #$9B ; ret
-	bne _4
+_1	cmp #$1E ; cur left
+	bne _2 
+	jmp back_pressed
+
+_2	cmp #$9B ; ret
+	bne _3
 	jmp return_pressed
-_4	cmp #'x'
-	bne _5
+
+_3	cmp #'x'
+	bne _4
 	jmp disable_pressed
-_5	cmp #$1B ; esc
-	bne _6
+
+_4	cmp #$1B ; esc
+	bne _5
 	jmp search_pressed
-_6	jmp main_loop
+
+_5	jmp main_loop
 
 down_pressed
 	lda cur_item
@@ -305,7 +316,9 @@ page_up
 	
 return_pressed
 	lda num_dir_entries
-	beq main_loop	; check for empty dir
+	bne return_pressed_ok	; check for empty dir
+	jmp main_loop
+return_pressed_ok
 	lda cur_item
 	sta $D500
 	lda #CART_CMD_OPEN_ITEM
@@ -970,7 +983,7 @@ Loop
 	.byte 124,128,0,128,0,128,0,128,0,128,0,128,81,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,68
 	.endl
 	.local menu_text4
-	.byte 124,202,128,128,0,128,0,128,0,202,128,128,124,"v1.1 Electrotrains/FJC '16", 124
+	.byte 124,202,128,128,0,128,0,128,0,202,128,128,124,"v1.2 Electrotrains/FJC '16", 124
 	.endl
 	.local menu_text5
 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,67

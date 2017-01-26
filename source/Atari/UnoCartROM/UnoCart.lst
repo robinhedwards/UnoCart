@@ -201,12 +201,12 @@ Source: C:\jac\wudsn\Workspace\Atari800\UnoCartROM\UnoCart.asm
    197 A006 A9 82 8D C6 02		mva #$82 COLOR2
    198 					
    199 A00B A9 03 85 09			mva #3 BOOT ; patch reset - from mapping the atari (revised) appendix 11
-   200 A00F A9 71 85 02 A9 A2 + 	mwa #reset_routine CASINI
+   200 A00F A9 7D 85 02 A9 A2 + 	mwa #reset_routine CASINI
    201 					
-   202 A017 20 47 A4		        jsr display_boot_screen
-   203 A01A 20 15 A6			jsr copy_wait_for_cart
-   204 A01D 20 2C A6			jsr copy_reboot_to_selected_cart
-   205 A020 20 84 A3			jsr setup_pmg
+   202 A017 20 53 A4		        jsr display_boot_screen
+   203 A01A 20 21 A6			jsr copy_wait_for_cart
+   204 A01D 20 38 A6			jsr copy_reboot_to_selected_cart
+   205 A020 20 90 A3			jsr setup_pmg
    206 					
    207 				; read directory
    208 A023			read_current_directory
@@ -217,7 +217,7 @@ Source: C:\jac\wudsn\Workspace\Atari800\UnoCartROM\UnoCart.asm
    213 A02C AD 01 D5			lda $D501
    214 A02F C9 01			cmp #1	; check for error flag
    215 A031 D0 06			bne read_dir_ok
-   216 A033 20 7B A2			jsr display_error_msg_from_cart
+   216 A033 20 87 A2			jsr display_error_msg_from_cart
    217 A036 4C 23 A0			jmp read_current_directory
    218 					
    219 A039			read_dir_ok
@@ -228,1130 +228,1143 @@ Source: C:\jac\wudsn\Workspace\Atari800\UnoCartROM\UnoCart.asm
    224 					
    225 				; display_directory
    226 A046			display_directory
-   227 A046 20 B6 A4			jsr output_header_text
-   228 A049 20 2F A3			jsr clear_screen
+   227 A046 20 C2 A4			jsr output_header_text
+   228 A049 20 3B A3			jsr clear_screen
    229 					
    230 A04C A5 80			lda num_dir_entries
    231 A04E D0 09			bne dir_ok
    232 					
-   233 A050 20 E1 A4		no_dir	jsr output_empty_dir_msg
-   234 A053 20 FD A3			jsr hide_pmg_cursor
+   233 A050 20 ED A4		no_dir	jsr output_empty_dir_msg
+   234 A053 20 09 A4			jsr hide_pmg_cursor
    235 A056 4C 5F A0			jmp main_loop
    236 					
-   237 A059 20 D2 A2		dir_ok	jsr output_directory
-   238 A05C 20 64 A3			jsr draw_cursor
+   237 A059 20 DE A2		dir_ok	jsr output_directory
+   238 A05C 20 70 A3			jsr draw_cursor
    239 					
    240 A05F			main_loop
-   241 A05F 20 72 A3			jsr GetKey
+   241 A05F 20 7E A3			jsr GetKey
    242 A062 F0 FB			beq main_loop
-   243 A064 C9 2D			cmp #'-'
-   244 A066 D0 03			bne _1
-   245 A068 4C B6 A0			jmp up_pressed
-   246 A06B C9 3D		_1	cmp #'='
-   247 A06D D0 03			bne _2
-   248 A06F 4C 91 A0			jmp down_pressed
-   249 A072 C9 62		_2	cmp #'b'
-   250 A074 D0 03			bne _3
-   251 A076 4C 07 A1			jmp back_pressed
-   252 A079 C9 9B		_3	cmp #$9B ; ret
-   253 A07B D0 03			bne _4
-   254 A07D 4C D4 A0			jmp return_pressed
-   255 A080 C9 78		_4	cmp #'x'
-   256 A082 D0 03			bne _5
-   257 A084 4C 15 A1			jmp disable_pressed
-   258 A087 C9 1B		_5	cmp #$1B ; esc
-   259 A089 D0 03			bne _6
-   260 A08B 4C 36 A1			jmp search_pressed
-   261 A08E 4C 5F A0		_6	jmp main_loop
-   262
-   263 A091			down_pressed
-   264 A091 A5 85			lda cur_item
-   265 A093 18				clc
-   266 A094 69 01			adc #1
-   267 A096 C5 80			cmp num_dir_entries
-   268 A098 B0 C5			bcs main_loop
-   269 				; single row down
-   270 A09A E6 85			inc cur_item
-   271 				; do we need to page down?
-   272 A09C A5 85			lda cur_item
-   273 A09E 38				sec
-   274 A09F E5 84			sbc top_item
-   275 A0A1 18				clc	
-   276 A0A2 C9 0F			cmp #ITEMS_PER_PAGE
-   277 A0A4 F0 06			beq page_down
-   278 A0A6 20 64 A3			jsr draw_cursor
-   279 A0A9 4C 5F A0			jmp main_loop
-   280 A0AC			page_down
-   281 A0AC A5 84			lda top_item
-   282 A0AE 18				clc
-   283 A0AF 69 0F			adc #ITEMS_PER_PAGE
-   284 A0B1 85 84			sta top_item
-   285 A0B3 4C 46 A0			jmp display_directory
-   286
-   287 A0B6			up_pressed
-   288 A0B6 A5 85			lda cur_item
-   289 A0B8 C9 00			cmp #0
-   290 A0BA F0 A3			beq main_loop
-   291 				; single row up
-   292 A0BC C6 85			dec cur_item
-   293 				; do we need to page up
-   294 A0BE A5 85			lda cur_item
-   295 A0C0 C5 84			cmp top_item
-   296 A0C2 30 06			bmi page_up
-   297 A0C4 20 64 A3			jsr draw_cursor
-   298 A0C7 4C 5F A0			jmp main_loop
-   299 A0CA			page_up
-   300 A0CA A5 84			lda top_item
-   301 A0CC 38				sec
-   302 A0CD E9 0F			sbc #ITEMS_PER_PAGE
-   303 A0CF 85 84			sta top_item
-   304 A0D1 4C 46 A0			jmp display_directory
-   305 					
-   306 A0D4			return_pressed
-   307 A0D4 A5 80			lda num_dir_entries
-   308 A0D6 F0 87			beq main_loop	; check for empty dir
-   309 A0D8 A5 85			lda cur_item
-   310 A0DA 8D 00 D5			sta $D500
-   311 A0DD A9 00			lda #CART_CMD_OPEN_ITEM
-   312 A0DF 20 20 06			jsr wait_for_cart
-   313
-   314 A0E2 AD 01 D5			lda $D501 ; look at return code from cart
-   315 A0E5 C9 00			cmp #0
-   316 A0E7 F0 12			beq directory_changed
-   317 A0E9 C9 01			cmp #1
-   318 A0EB F0 11			beq file_loaded
-   319 A0ED C9 02			cmp #2
-   320 A0EF F0 10			beq xex_loaded
-   321 A0F1 C9 03			cmp #3
-   322 A0F3 F0 0F			beq atr_loaded
-   323 					; if we get here, there was an error
-   324 A0F5 20 7B A2			jsr display_error_msg_from_cart
-   325 A0F8 4C 23 A0			jmp read_current_directory
-   326 A0FB			directory_changed
-   327 A0FB 4C 23 A0			jmp read_current_directory
-   328 A0FE			file_loaded
-   329 A0FE 4C 30 06			jmp reboot_to_selected_cart
-   330 A101			xex_loaded
-   331 A101 4C 1D A1			jmp launch_xex
-   332 A104			atr_loaded
-   333 A104 4C 26 A1			jmp launch_atr
-   334 						
-   335 A107			back_pressed
-   336 A107 A5 87			lda search_results_mode
-   337 A109 C9 01			cmp #1
-   338 A10B F0 05			beq exit_search_results
-   339 A10D A9 03			lda #CART_CMD_UP_DIR
-   340 A10F 20 20 06			jsr wait_for_cart
-   341 A112			exit_search_results
-   342 A112 4C 23 A0			jmp read_current_directory
-   343 					
-   344 A115			disable_pressed
-   345 A115 A9 FE			lda #CART_CMD_NO_CART
-   346 A117 20 20 06			jsr wait_for_cart
-   347 A11A 4C 30 06			jmp reboot_to_selected_cart
-   348
-   349 A11D			launch_xex
-   350 A11D 20 D0 A3			jsr disable_pmg
-   351 A120 20 41 A6			jsr copy_XEX_loader
-   352 A123 4C 03 07			jmp LoadBinaryFile
-   353 					
-   354 A126			launch_atr
-   355 A126 20 D0 A3			jsr disable_pmg
-   356 A129 20 6A A1			jsr copy_soft_rom
-   357 A12C C9 00			cmp #0
-   358 A12E F0 03			beq reboot_atr
-   359 A130 4C 23 A0			jmp read_current_directory
-   360 A133			reboot_atr
-   361 A133 4C 30 06			jmp reboot_to_selected_cart
-   362 						
-   363 A136			search_pressed
-   364 A136 20 11 A5			jsr output_search_box
-   365 A139 20 F7 A1			jsr get_search_string
-   366 A13C A5 86			lda search_text_len
-   367 A13E C9 00			cmp #0
-   368 A140 D0 03			bne search
-   369 A142 4C 46 A0			jmp display_directory
-   370 A145			search
-   371 					; copy search_text_len bytes from search_text to $D5xx
-   372 A145 A0 00			ldy #0
-   373 A147 B9 00 06		@	lda search_string,y
-   374 A14A 99 00 D5			sta $D500,y
-   375 A14D C8				iny
-   376 A14E 98				tya
-   377 A14F C5 86			cmp search_text_len
-   378 A151 90 F4			bcc @-
-   379 					; null terminate
-   380 A153 A9 00			lda #0
-   381 A155 99 00 D5			sta $D500,y
-   382 						
-   383 A158 20 2F A3			jsr clear_screen
-   384 A15B 20 F9 A4			jsr output_searching_msg
-   385 						
-   386 A15E A9 05			lda #CART_CMD_SEARCH
-   387 A160 20 20 06			jsr wait_for_cart
-   388 A163 A9 01 85 87			mva #1 search_results_mode
-   389 A167 4C 2C A0			jmp check_read_dir
-   390 				        .endp ; proc start
-   391
-   392
-   393 				; ************************ SUBROUTINES ****************************
-   394 A16A			.proc	copy_soft_rom
-   395 A16A A9 10			lda #CART_CMD_LOAD_SOFT_OS
-   396 A16C 20 20 06			jsr wait_for_cart
-   397 A16F AD 01 D5			lda $D501
-   398 A172 C9 01			cmp #1	; check for error flag
-   399 A174 D0 06			bne read_ok
-   400 A176 20 7B A2			jsr display_error_msg_from_cart
-   401 A179 A9 01			lda #1
-   402 A17B 60				rts
-   403 A17C			read_ok
-   404 					; the following is from Appendix 12 of Mapping the Atari (revised), pg218
-   405 A17C 08			swap	php	; save processor status
-   406 A17D 78				sei	; disable irqs
-   407 A17E AD 0E D4			lda NMIEN
-   408 A181 48				pha	; save NMIEN
-   409 A182 A9 00			lda #0
-   410 A184 8D 0E D4			sta NMIEN
-   411 					; set colors
-   412 A187 A9 B2 8D 17 D0		mva #$B2 $D017
-   413 A18C A9 B2 8D 18 D0		mva #$B2 $D018
-   414 					; switch ROM to RAM
-   415 A191 AD 01 D3			LDA PORTB
-   416 A194 29 FE			AND #$FE
-   417 A196 8D 01 D3			STA PORTB
-   418 					; copy
-   419
-   420 A199 A9 00 85 90 A9 C0 + 	mwa #OSROM tmp_ptr
-   421 A1A1 A9 00 85 99			mva #0 cur_chunk
-   422 A1A5			copy_page
-   423 A1A5 A5 91			lda tmp_ptr+1
-   424 A1A7 C9 D0			cmp #$D0
-   425 A1A9 D0 08			bne copy_first_half
-   426 					; skip $D000-D800
-   427 A1AB A9 D8			lda #$D8
-   428 A1AD 85 91			sta tmp_ptr+1
-   429 A1AF A9 30			lda #$30
-   430 A1B1 85 99			sta cur_chunk
-   431 A1B3			copy_first_half
-   432 A1B3 A9 00			lda #$00
-   433 A1B5 85 90			sta tmp_ptr
-   434 					; fetch the first 128 bytes from the cartridge
-   435 A1B7 A5 99			lda cur_chunk
-   436 A1B9 8D 00 D5			sta $D500
-   437 A1BC A9 11			lda #CART_CMD_SOFT_OS_CHUNK
-   438 A1BE 20 20 06			jsr wait_for_cart
-   439 A1C1 A0 00			ldy #0
-   440 A1C3 B9 01 D5		@	lda $D501,y
-   441 A1C6 91 90			sta (tmp_ptr),y
-   442 A1C8 C8				iny
-   443 A1C9 C0 80			cpy #128
-   444 A1CB D0 F6			bne @-
-   445 A1CD E6 99			inc cur_chunk
-   446 A1CF			copy_second_half
-   447 A1CF A9 80			lda #$80
-   448 A1D1 85 90			sta tmp_ptr
-   449 					; fetch the next 128 bytes from the cartridge
-   450 A1D3 A5 99			lda cur_chunk
-   451 A1D5 8D 00 D5			sta $D500
-   452 A1D8 A9 11			lda #CART_CMD_SOFT_OS_CHUNK
-   453 A1DA 20 20 06			jsr wait_for_cart
-   454 A1DD A0 00			ldy #0
-   455 A1DF B9 01 D5		@	lda $D501,y
-   456 A1E2 91 90			sta (tmp_ptr),y
-   457 A1E4 C8				iny
-   458 A1E5 C0 80			cpy #128
-   459 A1E7 D0 F6			bne @-
-   460 A1E9 E6 99			inc cur_chunk
-   461 					; move to the next page
-   462 A1EB E6 91			inc tmp_ptr+1
-   463 A1ED D0 B6			bne copy_page
-   464 					
-   465 A1EF 68			enable	pla
-   466 A1F0 8D 0E D4			sta NMIEN
-   467 A1F3 28				plp
-   468 A1F4 A9 00			lda #0
-   469 A1F6 60				rts
-   470 					.endp
-   471 					
-   472 A1F7			.proc   get_search_string
-   473 A1F7 A9 00 85 86			mva #0 search_text_len
-   474 A1FB 4C 3C A2			jmp output
-   475 A1FE			loop
-   476 A1FE 20 72 A3			jsr GetKey
-   477 A201 F0 FB			beq loop
-   478 A203 C9 1B			cmp #$1B ; esc
-   479 A205 F0 65			beq cancel
-   480 A207 C9 7E			cmp #$7E; del
-   481 A209 F0 0D			beq delete
-   482 A20B C9 9B			cmp #$9B ; ret
-   483 A20D F0 61			beq done
-   484 A20F A4 86			ldy search_text_len
-   485 A211 C0 0E			cpy #14
-   486 A213 F0 E9			beq loop
-   487 A215 4C 35 A2			jmp newchar
-   488 A218			delete	
-   489 A218 A5 86			lda search_text_len
-   490 A21A F0 E2			beq loop
-   491 					; erase character
-   492 A21C 18				clc
-   493 A21D 69 10			adc #16
-   494 A21F 85 92			sta text_out_x
-   495 A221 A9 7E 85 96 A9 A8 + 	mwa #cursor_text text_out_ptr
-   496 A229 A9 01 85 98			mva #1 text_out_len
-   497 A22D 20 94 A5			jsr output_text
-   498 					
-   499 A230 C6 86			dec search_text_len
-   500 A232 4C 3C A2			jmp output
-   501 A235			newchar		
-   502 A235 A4 86			ldy search_text_len
-   503 A237 99 00 06			sta search_string,y
-   504 A23A E6 86			inc search_text_len
-   505 A23C			output	
-   506 A23C A9 10 85 92			mva #16 text_out_x
-   507 A240 A9 09 85 94			mva #9 text_out_y
-   508 A244 A9 00 85 96 A9 06 + 	mwa #search_string text_out_ptr
-   509 A24C A5 86 85 98			mva search_text_len text_out_len
-   510 A250 20 94 A5			jsr output_text
-   511 					; draw cursor
-   512 A253 A5 92			lda text_out_x
-   513 A255 18				clc
-   514 A256 65 98			adc text_out_len
-   515 A258 85 92			sta text_out_x
-   516 A25A A9 7E 85 96 A9 A8 + 	mwa #cursor_text text_out_ptr
-   517 A262 A9 01 85 98			mva #1 text_out_len
-   518 A266 20 D6 A5			jsr output_text_inverted
-   519 					
-   520 A269 4C FE A1			jmp loop
-   521 A26C A9 00 85 86		cancel	mva #0 search_text_len
-   522 A270 60			done	rts
-   523 					.endp
-   524 A271			.proc	reset_routine
-   525 A271 A9 03 85 09			mva #3 BOOT
-   526 A275 A9 04			lda #CART_CMD_ROOT_DIR ; tell the mcu we've done a reset
-   527 A277 20 20 06			jsr wait_for_cart
-   528 A27A 60				rts
-   529 					.endp
-   530
-   531 A27B			.proc	display_error_msg_from_cart
-   532 A27B 20 FD A3			jsr hide_pmg_cursor
-   533 A27E A9 01 85 92			mva #1 text_out_x
-   534 A282 A9 08 85 94			mva #8 text_out_y
-   535 A286 A9 9A 85 96 A9 A7 + 	mwa #error_text1 text_out_ptr
-   536 A28E A9 26 85 98			mva #(.len error_text1) text_out_len
-   537 A292 20 60 A5			jsr output_text_internal
-   538 A295 E6 94			inc text_out_y
-   539 A297 A9 C0 85 96 A9 A7 + 	mwa #error_text2 text_out_ptr
-   540 A29F A9 26 85 98			mva #(.len error_text2) text_out_len
-   541 A2A3 20 60 A5			jsr output_text_internal
-   542 A2A6 E6 94			inc text_out_y
-   543 A2A8 A9 E6 85 96 A9 A7 + 	mwa #error_text3 text_out_ptr
-   544 A2B0 A9 26 85 98			mva #(.len error_text3) text_out_len
-   545 A2B4 20 60 A5			jsr output_text_internal
-   546 					; display the actual errro
-   547 A2B7 A9 08 85 92			mva #8 text_out_x
-   548 A2BB A9 09 85 94			mva #9 text_out_y
-   549 A2BF A9 02 85 96 A9 D5 + 	mwa #$D502 text_out_ptr
-   550 A2C7 A9 1E 85 98			mva #30 text_out_len
-   551 A2CB 20 94 A5			jsr output_text
-   552 A2CE 20 4E A5			jsr wait_key
-   553 A2D1 60				rts
-   554 					.endp
-   555 					
-   556 A2D2			.proc	output_directory
-   557 A2D2 A5 84 85 81			mva top_item dir_entry
-   558 A2D6 A9 07 85 82			mva #DIR_START_ROW ypos
-   559 A2DA			next_entry
-   560 A2DA A4 82			ldy ypos
-   561 A2DC 88				dey
-   562 A2DD 98				tya
-   563 A2DE C9 15			cmp #DIR_END_ROW
-   564 A2E0 F0 4C			beq end_of_page
-   565 A2E2 A5 81			lda dir_entry
-   566 A2E4 C5 80			cmp num_dir_entries
-   567 A2E6 F0 46			beq end_of_page
-   568 A2E8 8D 00 D5			sta $D500
-   569 A2EB A9 02			lda #CART_CMD_GET_DIR_ENTRY ; request from mcu
-   570 A2ED 20 20 06			jsr wait_for_cart
-   571 					
-   572 				; output the directory entry
-   573 A2F0 A5 82 85 94			mva ypos text_out_y
-   574 A2F4 A9 04 85 92			mva #4 text_out_x
-   575 A2F8 AE 01 D5			ldx $D501 ; 0 = file, 1 = folder
-   576 A2FB A9 02 85 96 A9 D5 + 	mwa #$D502 text_out_ptr
-   577 				;	mwa #test_text text_out_ptr
-   578 A303 A9 1F 85 98			mva #31 text_out_len
-   579 A307 E0 01			cpx #1
-   580 A309 F0 06			beq folder
-   581 A30B 20 94 A5		file	jsr output_text
-   582 A30E 4C 27 A3			jmp next
-   583 A311 20 94 A5		folder	jsr output_text
-   584 A314 A9 00 85 92			mva #0 text_out_x
-   585 A318 A9 03 85 98			mva #3 text_out_len
-   586 A31C A9 54 85 96 A9 A8 + 	mwa #folder_text text_out_ptr
-   587 A324 20 D6 A5			jsr output_text_inverted
-   588 A327 E6 82		next	inc ypos
-   589 A329 E6 81			inc dir_entry
-   590 A32B 4C DA A2			jmp next_entry
-   591 A32E			end_of_page
-   592 A32E 60				rts
-   593 					.endp
-   594
-   595 				; clear screen
-   596 A32F			clear_screen .proc
-   597 A32F A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
-   598 A337 A0 07			ldy #DIR_START_ROW
-   599 A339 88			@	dey
-   600 A33A 30 0E			bmi yend
-   601 A33C 18 A5 90 69 28 85 + 	adw tmp_ptr #40
-   602 A347 4C 39 A3			jmp @-
-   603 A34A			yend
-   604 A34A A2 0F			ldx #ITEMS_PER_PAGE	; number of lines to clear
-   605 A34C A9 00		yloop	lda #0
-   606 A34E A0 27			ldy #39
-   607 A350 91 90		xloop	sta (tmp_ptr),y
-   608 A352 88				dey
-   609 A353 10 FB			bpl xloop
-   610 A355 18 A5 90 69 28 85 + 	adw tmp_ptr #40
-   611 A360 CA				dex
-   612 A361 D0 E9			bne yloop
-   613 A363 60				rts
-   614 					.endp
-   615
-   616 A364			.proc 	draw_cursor
-   617 A364 A5 85			lda cur_item
-   618 A366 38				sec
-   619 A367 E5 84			sbc top_item
-   620 A369 18				clc
-   621 A36A 69 07			adc #DIR_START_ROW
-   622 A36C 85 83			sta cur_ypos
-   623 A36E 20 09 A4			jsr draw_pmg_cursor
-   624 A371 60				rts
-   625 					.endp
-   626
-   627 				;	Scan keyboard (returns N = 1 for no key pressed, else ASCII in A)
-   628 A372			.proc	GetKey
-   629 A372 AE FC 02			ldx CH
-   630 A375 E0 FF			cpx #$FF
-   631 A377 F0 0A			beq NoKey
-   632 A379 A9 FF 8D FC 02		mva #$FF CH		; set last key pressed to none
-   633 A37E BD 85 A8			lda scancodes,x
-   634 A381 C9 FF			cmp #$FF
-   635 A383			NoKey
-   636 A383 60				rts
-   637 					.endp
-   638 					
-   639 A384			.proc	setup_pmg 
-   640 A384 A9 08 8D 07 D4		mva #>PMBuffer PMBASE	
-   641 A389 A9 2E 8D 2F 02		mva #$2E SDMCTL
-   642 					
-   643 A38E A9 03 8D 08 D0		mva #$3 SizeP0
-   644 A393 A9 18 8D C0 02		mva #$18 PCOLR0
-   645 A398 A9 40 8D 00 D0		mva #$40 HPosP0
-   646 					
-   647 A39D A9 03 8D 09 D0		mva #$3 SizeP1
-   648 A3A2 A9 18 8D C1 02		mva #$18 PCOLR1
-   649 A3A7 A9 60 8D 01 D0		mva #$60 HPosP1
-   650 					
-   651 A3AC A9 03 8D 0A D0		mva #$3 SizeP2
-   652 A3B1 A9 18 8D C2 02		mva #$18 PCOLR2
-   653 A3B6 A9 80 8D 02 D0		mva #$80 HPosP2
-   654 					
-   655 A3BB A9 03 8D 0B D0		mva #$3 SizeP3
-   656 A3C0 A9 18 8D C3 02		mva #$18 PCOLR3
-   657 A3C5 A9 A0 8D 03 D0		mva #$A0 HPosP3
-   658 					
-   659 A3CA A9 01 8D 6F 02		mva #$1 GPRIOR
-   660 A3CF 60				rts
-   661 					.endp
-   662
-   663 A3D0			.proc	disable_pmg
-   664 A3D0 A9 22 8D 2F 02		mva #34 SDMCTL
-   665 A3D5 A9 00			lda #0
-   666 A3D7 8D 1D D0			sta GRACTL
-   667 A3DA A0 0C			ldy #$0c
-   668 A3DC			@
-   669 A3DC 99 00 D0			sta $D000,y
-   670 A3DF 88				dey
-   671 A3E0 10 FA			bpl @-
-   672 					
-   673 A3E2 A9 00 8D C0 02		mva #$0 PCOLR0
-   674 A3E7 A9 00 8D C1 02		mva #$0 PCOLR1
-   675 A3EC A9 00 8D C2 02		mva #$0 PCOLR2
-   676 A3F1 A9 00 8D C3 02		mva #$0 PCOLR3
-   677 					
-   678 A3F6 A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
-   679 A3FC 60				rts
-   680 					.endp
-   681 					
-   682 A3FD			.proc	hide_pmg_cursor
-   683 A3FD A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
-   684 A403 A9 00 8D 1D D0		mva #$0 GRACTL
-   685 A408 60				rts
-   686 					.endp
-   687 					
-   688 A409			.proc	draw_pmg_cursor
-   689 A409 A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
-   690 A40F A9 03 8D 1D D0		mva #$3 GRACTL
-   691 A414 A9 00			lda #0 ; clear pmg memory
-   692 A416 A0 7F			ldy #127
-   693 A418 99 00 0A		@	sta Player0Data,y
-   694 A41B 99 80 0A			sta Player1Data,y
-   695 A41E 99 00 0B			sta Player2Data,y
-   696 A421 99 80 0B			sta Player3Data,y
-   697 A424 88				dey
-   698 A425 10 F1			bpl @-
-   699
-   700 A427 A9 0C			lda #$C ; offset row 0
-   701 A429 A4 83			ldy cur_ypos
-   702 A42B 18				clc
-   703 A42C 69 04		@	adc #4	; skip character lines
-   704 A42E 88				dey
-   705 A42F 10 FB			bpl @-
-   706 A431 A8				tay
-   707 					
-   708 A432 A9 FF			lda #$FF ; draw
-   709 A434 A2 03			ldx #3
-   710 A436 99 00 0A		@	sta Player0Data,y
-   711 A439 99 80 0A			sta Player1Data,y
-   712 A43C 99 00 0B			sta Player2Data,y
-   713 A43F 99 80 0B			sta Player3Data,y
-   714 A442 C8				iny
-   715 A443 CA				dex
-   716 A444 10 F0			bpl @-
-   717 A446 60				rts
-   718 					.endp
-   719
-   720 A447			.proc	display_boot_screen
-   721 A447 A9 00 85 92			mva #0 text_out_x
-   722 A44B A9 00 85 94			mva #0 text_out_y
-   723 A44F A9 82 85 96 A9 A6 + 	mwa #menu_text1 text_out_ptr
-   724 A457 A9 28 85 98			mva #(.len menu_text1) text_out_len
-   725 A45B 20 60 A5			jsr output_text_internal
-   726 A45E E6 94			inc text_out_y
-   727 A460 A9 AA 85 96 A9 A6 + 	mwa #menu_text2 text_out_ptr
-   728 A468 A9 28 85 98			mva #(.len menu_text2) text_out_len
-   729 A46C 20 60 A5			jsr output_text_internal
-   730 A46F E6 94			inc text_out_y
-   731 A471 A9 D2 85 96 A9 A6 + 	mwa #menu_text3 text_out_ptr
-   732 A479 A9 28 85 98			mva #(.len menu_text3) text_out_len
-   733 A47D 20 60 A5			jsr output_text_internal
-   734 A480 E6 94			inc text_out_y
-   735 A482 A9 FA 85 96 A9 A6 + 	mwa #menu_text4 text_out_ptr
-   736 A48A A9 28 85 98			mva #(.len menu_text4) text_out_len
-   737 A48E 20 60 A5			jsr output_text_internal
-   738 A491 E6 94			inc text_out_y
-   739 A493 A9 22 85 96 A9 A7 + 	mwa #menu_text5 text_out_ptr
-   740 A49B A9 28 85 98			mva #(.len menu_text5) text_out_len
-   741 A49F 20 60 A5			jsr output_text_internal
-   742 A4A2 A9 17 85 94			mva #23 text_out_y
-   743 A4A6 A9 4A 85 96 A9 A7 + 	mwa #menu_text_bottom text_out_ptr
-   744 A4AE A9 28 85 98			mva #(.len menu_text_bottom) text_out_len
-   745 A4B2 20 D6 A5			jsr output_text_inverted
-   746 A4B5 60				rts
-   747 					.endp
-   748
-   749 A4B6			.proc	output_header_text
-   750 A4B6 A9 09 85 92			mva #9 text_out_x
-   751 A4BA A9 05 85 94			mva #DIR_START_ROW-2 text_out_y
-   752 A4BE A5 87			lda search_results_mode
-   753 A4C0 D0 0F			bne _2
-   754 A4C2 A9 72 85 96 A9 A7 + _1	mwa #directory_text text_out_ptr
-   755 A4CA A9 14 85 98			mva #(.len directory_text) text_out_len
-   756 A4CE 4C DD A4			jmp out
-   757 A4D1 A9 86 85 96 A9 A7 + _2	mwa #search_results_text text_out_ptr
-   758 A4D9 A9 14 85 98			mva #(.len search_results_text) text_out_len
-   759 A4DD 20 D6 A5		out	jsr output_text_inverted
-   760 A4E0 60				rts
-   761 					.endp
-   762
-   763 A4E1			.proc	output_empty_dir_msg
-   764 A4E1 A9 06 85 92			mva #6 text_out_x
-   765 A4E5 A9 08 85 94			mva #DIR_START_ROW+1 text_out_y
-   766 A4E9 A9 58 85 96 A9 A8 + 	mwa #empty_dir_text text_out_ptr
-   767 A4F1 A9 19 85 98			mva #(.len empty_dir_text) text_out_len
-   768 A4F5 20 94 A5			jsr output_text
-   769 A4F8 60				rts
-   770 					.endp
-   771
-   772 A4F9			.proc	output_searching_msg
-   773 A4F9 A9 0C 85 92			mva #12 text_out_x
-   774 A4FD A9 09 85 94			mva #9 text_out_y
-   775 A501 A9 71 85 96 A9 A8 + 	mwa #searching_text text_out_ptr
-   776 A509 A9 0D 85 98			mva #(.len searching_text) text_out_len
-   777 A50D 20 94 A5			jsr output_text
-   778 A510 60				rts
-   779 					.endp
-   780
-   781 A511			.proc	output_search_box
-   782 A511 20 FD A3			jsr hide_pmg_cursor
-   783 A514 A9 08 85 92			mva #8 text_out_x
-   784 A518 A9 08 85 94			mva #8 text_out_y
-   785 A51C A9 0C 85 96 A9 A8 + 	mwa #search_text1 text_out_ptr
-   786 A524 A9 18 85 98			mva #(.len search_text1) text_out_len
-   787 A528 20 60 A5			jsr output_text_internal
-   788 A52B E6 94			inc text_out_y
-   789 A52D A9 24 85 96 A9 A8 + 	mwa #search_text2 text_out_ptr
-   790 A535 A9 18 85 98			mva #(.len search_text2) text_out_len
-   791 A539 20 60 A5			jsr output_text_internal
-   792 A53C E6 94			inc text_out_y
-   793 A53E A9 3C 85 96 A9 A8 + 	mwa #search_text3 text_out_ptr
-   794 A546 A9 18 85 98			mva #(.len search_text3) text_out_len
-   795 A54A 20 60 A5			jsr output_text_internal
-   796 A54D 60				rts
-   797 					.endp
-   798
-   799 					
-   800 A54E			.proc	wait_key
-   801 A54E A9 FF 8D FC 02		mva #$FF CH		; set last key pressed to none
-   802 A553 AE FC 02		@	ldx CH
-   803 A556 E0 FF			cpx #$FF
-   804 A558 F0 F9			beq @-
-   805 A55A A9 FF 8D FC 02		mva #$FF CH
-   806 A55F 60				rts
-   807 					.endp
-   808
-   809 				; output text in text_out_ptr at (cur_x, cur_y)
-   810 A560			.proc	output_text_internal
-   811 A560 A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
-   812 				; add the cursor y offset
-   813 A568 A4 94			ldy text_out_y
-   814 A56A 88			yloop	dey
-   815 A56B 30 0E			bmi yend
-   816 A56D 18 A5 90 69 28 85 + 	adw tmp_ptr #40
-   817 A578 4C 6A A5			jmp yloop
-   818 A57B 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
-   819 				; text output loop
-   820 A588 A0 00			ldy #0
-   821 A58A			nextchar ; text output loop
-   822 A58A B1 96			lda (text_out_ptr),y
-   823 A58C 91 90			sta (tmp_ptr),y
-   824 A58E C8				iny
-   825 A58F C4 98			cpy text_out_len
-   826 A591 D0 F7			bne nextchar
-   827 A593			endoftext	
-   828 A593 60				rts
-   829 					.endp
-   830
-   831 				; output text in text_out_ptr at (cur_x, cur_y)
-   832 A594			.proc	output_text
-   833 A594 A5 98			lda text_out_len
-   834 A596 D0 01			bne ok
-   835 A598 60				rts
-   836 A599 A5 58 85 90 A5 59 + ok	mwa sm_ptr tmp_ptr
-   837 				; add the cursor y offset
-   838 A5A1 A4 94			ldy text_out_y
-   839 A5A3 88			yloop	dey
-   840 A5A4 30 0E			bmi yend
-   841 A5A6 18 A5 90 69 28 85 + 	adw tmp_ptr #40
-   842 A5B1 4C A3 A5			jmp yloop
-   843 A5B4 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
-   844 				; text output loop
-   845 A5C1 A0 00			ldy #0
-   846 A5C3			nextchar ; text output loop
-   847 A5C3 B1 96			lda (text_out_ptr),y
-   848 A5C5 F0 0E			beq endoftext ; end of line?
-   849 A5C7 C9 60			cmp #96; convert ascii->internal
-   850 A5C9 B0 03			bcs lower
-   851 A5CB 38				sec
-   852 A5CC E9 20			sbc #32
-   853 A5CE 91 90		lower	sta (tmp_ptr),y
-   854 A5D0 C8				iny
-   855 A5D1 C4 98			cpy text_out_len
-   856 A5D3 D0 EE			bne nextchar
-   857 A5D5			endoftext	
-   858 A5D5 60				rts
-   859 					.endp
-   860
-   861 				; output text in text_out_ptr at (cur_x, cur_y)
-   862 A5D6			output_text_inverted .proc 
-   863 A5D6 A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
-   864 				; add the cursor y offset
-   865 A5DE A4 94			ldy text_out_y
-   866 A5E0 88			yloop	dey
-   867 A5E1 30 0E			bmi yend
-   868 A5E3 18 A5 90 69 28 85 + 	adw tmp_ptr #40
-   869 A5EE 4C E0 A5			jmp yloop
-   870 A5F1 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
-   871 				; text output loop
-   872 A5FE A0 00			ldy #0
-   873 A600			nextchar ; text output loop
-   874 A600 B1 96			lda (text_out_ptr),y
-   875 A602 F0 10			beq endoftext ; end of line?
-   876 A604 C9 60			cmp #96; convert ascii->internal
-   877 A606 B0 03			bcs lower
-   878 A608 38				sec
-   879 A609 E9 20			sbc #32
-   880 A60B 09 80		lower	ora #$80
-   881 A60D 91 90			sta (tmp_ptr),y
-   882 A60F C8				iny
-   883 A610 C4 98			cpy text_out_len
-   884 A612 D0 EC			bne nextchar
-   885 A614			endoftext	
-   886 A614 60				rts
-   887 					.endp
-   888
-   889 A615			.proc	copy_wait_for_cart
-   890 A615 A0 0B			ldy #.len[WaitForCartCode]
-   891 A617			@
-   892 A617 B9 20 A6			lda WaitForCartCode-1,y
-   893 A61A 99 1F 06			sta wait_for_cart-1,y
-   894 A61D 88				dey
-   895 A61E D0 F7			bne @-
-   896 A620 60				rts
-   897 					.endp
-   898 					
-   899 				; cmd is in Accumulator
-   900 A621			.proc WaitForCartCode
-   901 A621 8D DF D5			sta $D5DF	; send cmd to the cart
-   902 A624 AD 00 D5		@	lda $D500
-   903 A627 C9 11			cmp #$11	; wait for the cart to signal it's back
-   904 A629 D0 F9			bne @-
-   905 A62B 60				rts
-   906 					.endp
-   907
-   908 A62C			.proc	copy_reboot_to_selected_cart
-   909 A62C A0 09			ldy #.len[RebootToSelectedCartCode]
-   910 A62E			@
-   911 A62E B9 37 A6			lda RebootToSelectedCartCode-1,y
-   912 A631 99 2F 06			sta reboot_to_selected_cart-1,y
-   913 A634 88				dey
-   914 A635 D0 F7			bne @-
-   915 A637 60				rts
-   916 					.endp
-   917 					
-   918 A638			.proc RebootToSelectedCartCode
-   919 A638 78				sei				; prevent GINTLK check in deferred vbi
-   920 A639 A9 FF			lda #CART_CMD_ACTIVATE_CART	; tell the cart we're ready for it switch ROM
-   921 A63B 8D DF D5			sta $D5DF
-   922 A63E 4C 77 E4			jmp COLDSV
-   923 					.endp
-   924
-   925 				; ************************ XEX LOADER ****************************
-   926
-   927 A641			.proc copy_XEX_loader
-   928 A641 A9 85 85 43 A9 A9 + 	mwa #LoaderCodeStart ptr1
-   929 A649 A9 00 85 45 A9 07 + 	mwa #LoaderAddress ptr2
-   930 A651 A9 FF 85 47 A9 01 + 	mwa #[EndLoaderCode-LoaderCode] ptr3
-   931 A659 4C 5C A6			jmp UMove
-   932 					.endp
-   933 					
-   934 				; Move bytes from ptr1 to ptr2, length ptr3
-   935 A65C			.proc UMove
-   936 A65C A5 47			lda ptr3
-   937 A65E 49 FF			eor #$FF
-   938 A660 69 01			adc #1
-   939 A662 85 47			sta ptr3
-   940 A664 A5 48			lda ptr3+1
-   941 A666 49 FF			eor #$FF
-   942 A668 69 00			adc #0
-   943 A66A 85 48			sta ptr3+1
-   944 					
-   945 A66C A0 00			ldy #0
-   946 A66E			Loop
-   947 A66E B1 43			lda (ptr1),y
-   948 A670 91 45			sta (ptr2),y
-   949 A672 C8				iny
-   950 A673 D0 04			bne @+
-   951 A675 E6 44			inc ptr1+1
-   952 A677 E6 46			inc ptr2+1
-   953 A679			@
-   954 A679 E6 47			inc ptr3
-   955 A67B D0 F1			bne Loop
-   956 A67D E6 48			inc ptr3+1
-   957 A67F D0 ED			bne Loop
-   958 A681 60				rts
-   959 					.endp
-   960
-   961
-   962 				; ************************ DATA ****************************
-   963 A682				.local menu_text1
-   964 A682 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,87,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
-   965 					.endl
-   966 A6AA				.local menu_text2
-   967 A6AA 7C 80 00 80 00 80 + 	.byte 124,128,0,128,0,128,128,74,0,128,128,74," CART",124,"  ROM/CAR/XEX<=128k  ",124
-   968 					.endl
-   969 A6D2				.local menu_text3
-   970 A6D2 7C 80 00 80 00 80 + 	.byte 124,128,0,128,0,128,0,128,0,128,0,128,81,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,68
-   971 					.endl
-   972 A6FA				.local menu_text4
-   973 A6FA 7C CA 80 80 00 80 + 	.byte 124,202,128,128,0,128,0,128,0,202,128,128,124,"v1.1 Electrotrains/FJC '16", 124
-   974 					.endl
-   975 A722				.local menu_text5
-   976 A722 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,67
-   977 					.endl
-   978 A74A				.local menu_text_bottom
-   979 A74A 43 75 72 55 70 2F + 	.byte 'CurUp/Dn/Retn=Sel B=Back X=Boot Esc=Find'
-   980 					.endl
-   981 A772				.local directory_text
-   982 A772 5B 44 69 72 65 63 + 	.byte '[Directory contents]'
-   983 					.endl
-   984 A786				.local search_results_text
-   985 A786 5B 20 20 53 65 61 + 	.byte '[  Search results  ]'
-   986 					.endl
-   987 					
-   988 A79A				.local error_text1
-   989 A79A 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
+   243 A064 C9 1C			cmp #$1C ; cur up
+   244 A066 F0 57			beq up_pressed
+   245 A068 C9 2D			cmp #'-'
+   246 A06A F0 53			beq up_pressed
+   247 					
+   248 A06C C9 1D			cmp #$1D ; cur down
+   249 A06E F0 2A			beq down_pressed
+   250 A070 C9 3D			cmp #'='
+   251 A072 F0 26			beq down_pressed
+   252 					
+   253 A074 C9 62			cmp #'b'
+   254 A076 D0 03			bne _1
+   255 A078 4C 13 A1			jmp back_pressed
+   256 A07B C9 1E		_1	cmp #$1E ; cur left
+   257 A07D D0 03			bne _2 
+   258 A07F 4C 13 A1			jmp back_pressed
+   259
+   260 A082 C9 9B		_2	cmp #$9B ; ret
+   261 A084 D0 03			bne _3
+   262 A086 4C DD A0			jmp return_pressed
+   263
+   264 A089 C9 78		_3	cmp #'x'
+   265 A08B D0 03			bne _4
+   266 A08D 4C 21 A1			jmp disable_pressed
+   267
+   268 A090 C9 1B		_4	cmp #$1B ; esc
+   269 A092 D0 03			bne _5
+   270 A094 4C 42 A1			jmp search_pressed
+   271
+   272 A097 4C 5F A0		_5	jmp main_loop
+   273
+   274 A09A			down_pressed
+   275 A09A A5 85			lda cur_item
+   276 A09C 18				clc
+   277 A09D 69 01			adc #1
+   278 A09F C5 80			cmp num_dir_entries
+   279 A0A1 B0 BC			bcs main_loop
+   280 				; single row down
+   281 A0A3 E6 85			inc cur_item
+   282 				; do we need to page down?
+   283 A0A5 A5 85			lda cur_item
+   284 A0A7 38				sec
+   285 A0A8 E5 84			sbc top_item
+   286 A0AA 18				clc	
+   287 A0AB C9 0F			cmp #ITEMS_PER_PAGE
+   288 A0AD F0 06			beq page_down
+   289 A0AF 20 70 A3			jsr draw_cursor
+   290 A0B2 4C 5F A0			jmp main_loop
+   291 A0B5			page_down
+   292 A0B5 A5 84			lda top_item
+   293 A0B7 18				clc
+   294 A0B8 69 0F			adc #ITEMS_PER_PAGE
+   295 A0BA 85 84			sta top_item
+   296 A0BC 4C 46 A0			jmp display_directory
+   297
+   298 A0BF			up_pressed
+   299 A0BF A5 85			lda cur_item
+   300 A0C1 C9 00			cmp #0
+   301 A0C3 F0 9A			beq main_loop
+   302 				; single row up
+   303 A0C5 C6 85			dec cur_item
+   304 				; do we need to page up
+   305 A0C7 A5 85			lda cur_item
+   306 A0C9 C5 84			cmp top_item
+   307 A0CB 30 06			bmi page_up
+   308 A0CD 20 70 A3			jsr draw_cursor
+   309 A0D0 4C 5F A0			jmp main_loop
+   310 A0D3			page_up
+   311 A0D3 A5 84			lda top_item
+   312 A0D5 38				sec
+   313 A0D6 E9 0F			sbc #ITEMS_PER_PAGE
+   314 A0D8 85 84			sta top_item
+   315 A0DA 4C 46 A0			jmp display_directory
+   316 					
+   317 A0DD			return_pressed
+   318 A0DD A5 80			lda num_dir_entries
+   319 A0DF D0 03			bne return_pressed_ok	; check for empty dir
+   320 A0E1 4C 5F A0			jmp main_loop
+   321 A0E4			return_pressed_ok
+   322 A0E4 A5 85			lda cur_item
+   323 A0E6 8D 00 D5			sta $D500
+   324 A0E9 A9 00			lda #CART_CMD_OPEN_ITEM
+   325 A0EB 20 20 06			jsr wait_for_cart
+   326
+   327 A0EE AD 01 D5			lda $D501 ; look at return code from cart
+   328 A0F1 C9 00			cmp #0
+   329 A0F3 F0 12			beq directory_changed
+   330 A0F5 C9 01			cmp #1
+   331 A0F7 F0 11			beq file_loaded
+   332 A0F9 C9 02			cmp #2
+   333 A0FB F0 10			beq xex_loaded
+   334 A0FD C9 03			cmp #3
+   335 A0FF F0 0F			beq atr_loaded
+   336 					; if we get here, there was an error
+   337 A101 20 87 A2			jsr display_error_msg_from_cart
+   338 A104 4C 23 A0			jmp read_current_directory
+   339 A107			directory_changed
+   340 A107 4C 23 A0			jmp read_current_directory
+   341 A10A			file_loaded
+   342 A10A 4C 30 06			jmp reboot_to_selected_cart
+   343 A10D			xex_loaded
+   344 A10D 4C 29 A1			jmp launch_xex
+   345 A110			atr_loaded
+   346 A110 4C 32 A1			jmp launch_atr
+   347 						
+   348 A113			back_pressed
+   349 A113 A5 87			lda search_results_mode
+   350 A115 C9 01			cmp #1
+   351 A117 F0 05			beq exit_search_results
+   352 A119 A9 03			lda #CART_CMD_UP_DIR
+   353 A11B 20 20 06			jsr wait_for_cart
+   354 A11E			exit_search_results
+   355 A11E 4C 23 A0			jmp read_current_directory
+   356 					
+   357 A121			disable_pressed
+   358 A121 A9 FE			lda #CART_CMD_NO_CART
+   359 A123 20 20 06			jsr wait_for_cart
+   360 A126 4C 30 06			jmp reboot_to_selected_cart
+   361
+   362 A129			launch_xex
+   363 A129 20 DC A3			jsr disable_pmg
+   364 A12C 20 4D A6			jsr copy_XEX_loader
+   365 A12F 4C 03 07			jmp LoadBinaryFile
+   366 					
+   367 A132			launch_atr
+   368 A132 20 DC A3			jsr disable_pmg
+   369 A135 20 76 A1			jsr copy_soft_rom
+   370 A138 C9 00			cmp #0
+   371 A13A F0 03			beq reboot_atr
+   372 A13C 4C 23 A0			jmp read_current_directory
+   373 A13F			reboot_atr
+   374 A13F 4C 30 06			jmp reboot_to_selected_cart
+   375 						
+   376 A142			search_pressed
+   377 A142 20 1D A5			jsr output_search_box
+   378 A145 20 03 A2			jsr get_search_string
+   379 A148 A5 86			lda search_text_len
+   380 A14A C9 00			cmp #0
+   381 A14C D0 03			bne search
+   382 A14E 4C 46 A0			jmp display_directory
+   383 A151			search
+   384 					; copy search_text_len bytes from search_text to $D5xx
+   385 A151 A0 00			ldy #0
+   386 A153 B9 00 06		@	lda search_string,y
+   387 A156 99 00 D5			sta $D500,y
+   388 A159 C8				iny
+   389 A15A 98				tya
+   390 A15B C5 86			cmp search_text_len
+   391 A15D 90 F4			bcc @-
+   392 					; null terminate
+   393 A15F A9 00			lda #0
+   394 A161 99 00 D5			sta $D500,y
+   395 						
+   396 A164 20 3B A3			jsr clear_screen
+   397 A167 20 05 A5			jsr output_searching_msg
+   398 						
+   399 A16A A9 05			lda #CART_CMD_SEARCH
+   400 A16C 20 20 06			jsr wait_for_cart
+   401 A16F A9 01 85 87			mva #1 search_results_mode
+   402 A173 4C 2C A0			jmp check_read_dir
+   403 				        .endp ; proc start
+   404
+   405
+   406 				; ************************ SUBROUTINES ****************************
+   407 A176			.proc	copy_soft_rom
+   408 A176 A9 10			lda #CART_CMD_LOAD_SOFT_OS
+   409 A178 20 20 06			jsr wait_for_cart
+   410 A17B AD 01 D5			lda $D501
+   411 A17E C9 01			cmp #1	; check for error flag
+   412 A180 D0 06			bne read_ok
+   413 A182 20 87 A2			jsr display_error_msg_from_cart
+   414 A185 A9 01			lda #1
+   415 A187 60				rts
+   416 A188			read_ok
+   417 					; the following is from Appendix 12 of Mapping the Atari (revised), pg218
+   418 A188 08			swap	php	; save processor status
+   419 A189 78				sei	; disable irqs
+   420 A18A AD 0E D4			lda NMIEN
+   421 A18D 48				pha	; save NMIEN
+   422 A18E A9 00			lda #0
+   423 A190 8D 0E D4			sta NMIEN
+   424 					; set colors
+   425 A193 A9 B2 8D 17 D0		mva #$B2 $D017
+   426 A198 A9 B2 8D 18 D0		mva #$B2 $D018
+   427 					; switch ROM to RAM
+   428 A19D AD 01 D3			LDA PORTB
+   429 A1A0 29 FE			AND #$FE
+   430 A1A2 8D 01 D3			STA PORTB
+   431 					; copy
+   432
+   433 A1A5 A9 00 85 90 A9 C0 + 	mwa #OSROM tmp_ptr
+   434 A1AD A9 00 85 99			mva #0 cur_chunk
+   435 A1B1			copy_page
+   436 A1B1 A5 91			lda tmp_ptr+1
+   437 A1B3 C9 D0			cmp #$D0
+   438 A1B5 D0 08			bne copy_first_half
+   439 					; skip $D000-D800
+   440 A1B7 A9 D8			lda #$D8
+   441 A1B9 85 91			sta tmp_ptr+1
+   442 A1BB A9 30			lda #$30
+   443 A1BD 85 99			sta cur_chunk
+   444 A1BF			copy_first_half
+   445 A1BF A9 00			lda #$00
+   446 A1C1 85 90			sta tmp_ptr
+   447 					; fetch the first 128 bytes from the cartridge
+   448 A1C3 A5 99			lda cur_chunk
+   449 A1C5 8D 00 D5			sta $D500
+   450 A1C8 A9 11			lda #CART_CMD_SOFT_OS_CHUNK
+   451 A1CA 20 20 06			jsr wait_for_cart
+   452 A1CD A0 00			ldy #0
+   453 A1CF B9 01 D5		@	lda $D501,y
+   454 A1D2 91 90			sta (tmp_ptr),y
+   455 A1D4 C8				iny
+   456 A1D5 C0 80			cpy #128
+   457 A1D7 D0 F6			bne @-
+   458 A1D9 E6 99			inc cur_chunk
+   459 A1DB			copy_second_half
+   460 A1DB A9 80			lda #$80
+   461 A1DD 85 90			sta tmp_ptr
+   462 					; fetch the next 128 bytes from the cartridge
+   463 A1DF A5 99			lda cur_chunk
+   464 A1E1 8D 00 D5			sta $D500
+   465 A1E4 A9 11			lda #CART_CMD_SOFT_OS_CHUNK
+   466 A1E6 20 20 06			jsr wait_for_cart
+   467 A1E9 A0 00			ldy #0
+   468 A1EB B9 01 D5		@	lda $D501,y
+   469 A1EE 91 90			sta (tmp_ptr),y
+   470 A1F0 C8				iny
+   471 A1F1 C0 80			cpy #128
+   472 A1F3 D0 F6			bne @-
+   473 A1F5 E6 99			inc cur_chunk
+   474 					; move to the next page
+   475 A1F7 E6 91			inc tmp_ptr+1
+   476 A1F9 D0 B6			bne copy_page
+   477 					
+   478 A1FB 68			enable	pla
+   479 A1FC 8D 0E D4			sta NMIEN
+   480 A1FF 28				plp
+   481 A200 A9 00			lda #0
+   482 A202 60				rts
+   483 					.endp
+   484 					
+   485 A203			.proc   get_search_string
+   486 A203 A9 00 85 86			mva #0 search_text_len
+   487 A207 4C 48 A2			jmp output
+   488 A20A			loop
+   489 A20A 20 7E A3			jsr GetKey
+   490 A20D F0 FB			beq loop
+   491 A20F C9 1B			cmp #$1B ; esc
+   492 A211 F0 65			beq cancel
+   493 A213 C9 7E			cmp #$7E; del
+   494 A215 F0 0D			beq delete
+   495 A217 C9 9B			cmp #$9B ; ret
+   496 A219 F0 61			beq done
+   497 A21B A4 86			ldy search_text_len
+   498 A21D C0 0E			cpy #14
+   499 A21F F0 E9			beq loop
+   500 A221 4C 41 A2			jmp newchar
+   501 A224			delete	
+   502 A224 A5 86			lda search_text_len
+   503 A226 F0 E2			beq loop
+   504 					; erase character
+   505 A228 18				clc
+   506 A229 69 10			adc #16
+   507 A22B 85 92			sta text_out_x
+   508 A22D A9 8A 85 96 A9 A8 + 	mwa #cursor_text text_out_ptr
+   509 A235 A9 01 85 98			mva #1 text_out_len
+   510 A239 20 A0 A5			jsr output_text
+   511 					
+   512 A23C C6 86			dec search_text_len
+   513 A23E 4C 48 A2			jmp output
+   514 A241			newchar		
+   515 A241 A4 86			ldy search_text_len
+   516 A243 99 00 06			sta search_string,y
+   517 A246 E6 86			inc search_text_len
+   518 A248			output	
+   519 A248 A9 10 85 92			mva #16 text_out_x
+   520 A24C A9 09 85 94			mva #9 text_out_y
+   521 A250 A9 00 85 96 A9 06 + 	mwa #search_string text_out_ptr
+   522 A258 A5 86 85 98			mva search_text_len text_out_len
+   523 A25C 20 A0 A5			jsr output_text
+   524 					; draw cursor
+   525 A25F A5 92			lda text_out_x
+   526 A261 18				clc
+   527 A262 65 98			adc text_out_len
+   528 A264 85 92			sta text_out_x
+   529 A266 A9 8A 85 96 A9 A8 + 	mwa #cursor_text text_out_ptr
+   530 A26E A9 01 85 98			mva #1 text_out_len
+   531 A272 20 E2 A5			jsr output_text_inverted
+   532 					
+   533 A275 4C 0A A2			jmp loop
+   534 A278 A9 00 85 86		cancel	mva #0 search_text_len
+   535 A27C 60			done	rts
+   536 					.endp
+   537 A27D			.proc	reset_routine
+   538 A27D A9 03 85 09			mva #3 BOOT
+   539 A281 A9 04			lda #CART_CMD_ROOT_DIR ; tell the mcu we've done a reset
+   540 A283 20 20 06			jsr wait_for_cart
+   541 A286 60				rts
+   542 					.endp
+   543
+   544 A287			.proc	display_error_msg_from_cart
+   545 A287 20 09 A4			jsr hide_pmg_cursor
+   546 A28A A9 01 85 92			mva #1 text_out_x
+   547 A28E A9 08 85 94			mva #8 text_out_y
+   548 A292 A9 A6 85 96 A9 A7 + 	mwa #error_text1 text_out_ptr
+   549 A29A A9 26 85 98			mva #(.len error_text1) text_out_len
+   550 A29E 20 6C A5			jsr output_text_internal
+   551 A2A1 E6 94			inc text_out_y
+   552 A2A3 A9 CC 85 96 A9 A7 + 	mwa #error_text2 text_out_ptr
+   553 A2AB A9 26 85 98			mva #(.len error_text2) text_out_len
+   554 A2AF 20 6C A5			jsr output_text_internal
+   555 A2B2 E6 94			inc text_out_y
+   556 A2B4 A9 F2 85 96 A9 A7 + 	mwa #error_text3 text_out_ptr
+   557 A2BC A9 26 85 98			mva #(.len error_text3) text_out_len
+   558 A2C0 20 6C A5			jsr output_text_internal
+   559 					; display the actual errro
+   560 A2C3 A9 08 85 92			mva #8 text_out_x
+   561 A2C7 A9 09 85 94			mva #9 text_out_y
+   562 A2CB A9 02 85 96 A9 D5 + 	mwa #$D502 text_out_ptr
+   563 A2D3 A9 1E 85 98			mva #30 text_out_len
+   564 A2D7 20 A0 A5			jsr output_text
+   565 A2DA 20 5A A5			jsr wait_key
+   566 A2DD 60				rts
+   567 					.endp
+   568 					
+   569 A2DE			.proc	output_directory
+   570 A2DE A5 84 85 81			mva top_item dir_entry
+   571 A2E2 A9 07 85 82			mva #DIR_START_ROW ypos
+   572 A2E6			next_entry
+   573 A2E6 A4 82			ldy ypos
+   574 A2E8 88				dey
+   575 A2E9 98				tya
+   576 A2EA C9 15			cmp #DIR_END_ROW
+   577 A2EC F0 4C			beq end_of_page
+   578 A2EE A5 81			lda dir_entry
+   579 A2F0 C5 80			cmp num_dir_entries
+   580 A2F2 F0 46			beq end_of_page
+   581 A2F4 8D 00 D5			sta $D500
+   582 A2F7 A9 02			lda #CART_CMD_GET_DIR_ENTRY ; request from mcu
+   583 A2F9 20 20 06			jsr wait_for_cart
+   584 					
+   585 				; output the directory entry
+   586 A2FC A5 82 85 94			mva ypos text_out_y
+   587 A300 A9 04 85 92			mva #4 text_out_x
+   588 A304 AE 01 D5			ldx $D501 ; 0 = file, 1 = folder
+   589 A307 A9 02 85 96 A9 D5 + 	mwa #$D502 text_out_ptr
+   590 				;	mwa #test_text text_out_ptr
+   591 A30F A9 1F 85 98			mva #31 text_out_len
+   592 A313 E0 01			cpx #1
+   593 A315 F0 06			beq folder
+   594 A317 20 A0 A5		file	jsr output_text
+   595 A31A 4C 33 A3			jmp next
+   596 A31D 20 A0 A5		folder	jsr output_text
+   597 A320 A9 00 85 92			mva #0 text_out_x
+   598 A324 A9 03 85 98			mva #3 text_out_len
+   599 A328 A9 60 85 96 A9 A8 + 	mwa #folder_text text_out_ptr
+   600 A330 20 E2 A5			jsr output_text_inverted
+   601 A333 E6 82		next	inc ypos
+   602 A335 E6 81			inc dir_entry
+   603 A337 4C E6 A2			jmp next_entry
+   604 A33A			end_of_page
+   605 A33A 60				rts
+   606 					.endp
+   607
+   608 				; clear screen
+   609 A33B			clear_screen .proc
+   610 A33B A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
+   611 A343 A0 07			ldy #DIR_START_ROW
+   612 A345 88			@	dey
+   613 A346 30 0E			bmi yend
+   614 A348 18 A5 90 69 28 85 + 	adw tmp_ptr #40
+   615 A353 4C 45 A3			jmp @-
+   616 A356			yend
+   617 A356 A2 0F			ldx #ITEMS_PER_PAGE	; number of lines to clear
+   618 A358 A9 00		yloop	lda #0
+   619 A35A A0 27			ldy #39
+   620 A35C 91 90		xloop	sta (tmp_ptr),y
+   621 A35E 88				dey
+   622 A35F 10 FB			bpl xloop
+   623 A361 18 A5 90 69 28 85 + 	adw tmp_ptr #40
+   624 A36C CA				dex
+   625 A36D D0 E9			bne yloop
+   626 A36F 60				rts
+   627 					.endp
+   628
+   629 A370			.proc 	draw_cursor
+   630 A370 A5 85			lda cur_item
+   631 A372 38				sec
+   632 A373 E5 84			sbc top_item
+   633 A375 18				clc
+   634 A376 69 07			adc #DIR_START_ROW
+   635 A378 85 83			sta cur_ypos
+   636 A37A 20 15 A4			jsr draw_pmg_cursor
+   637 A37D 60				rts
+   638 					.endp
+   639
+   640 				;	Scan keyboard (returns N = 1 for no key pressed, else ASCII in A)
+   641 A37E			.proc	GetKey
+   642 A37E AE FC 02			ldx CH
+   643 A381 E0 FF			cpx #$FF
+   644 A383 F0 0A			beq NoKey
+   645 A385 A9 FF 8D FC 02		mva #$FF CH		; set last key pressed to none
+   646 A38A BD 91 A8			lda scancodes,x
+   647 A38D C9 FF			cmp #$FF
+   648 A38F			NoKey
+   649 A38F 60				rts
+   650 					.endp
+   651 					
+   652 A390			.proc	setup_pmg 
+   653 A390 A9 08 8D 07 D4		mva #>PMBuffer PMBASE	
+   654 A395 A9 2E 8D 2F 02		mva #$2E SDMCTL
+   655 					
+   656 A39A A9 03 8D 08 D0		mva #$3 SizeP0
+   657 A39F A9 18 8D C0 02		mva #$18 PCOLR0
+   658 A3A4 A9 40 8D 00 D0		mva #$40 HPosP0
+   659 					
+   660 A3A9 A9 03 8D 09 D0		mva #$3 SizeP1
+   661 A3AE A9 18 8D C1 02		mva #$18 PCOLR1
+   662 A3B3 A9 60 8D 01 D0		mva #$60 HPosP1
+   663 					
+   664 A3B8 A9 03 8D 0A D0		mva #$3 SizeP2
+   665 A3BD A9 18 8D C2 02		mva #$18 PCOLR2
+   666 A3C2 A9 80 8D 02 D0		mva #$80 HPosP2
+   667 					
+   668 A3C7 A9 03 8D 0B D0		mva #$3 SizeP3
+   669 A3CC A9 18 8D C3 02		mva #$18 PCOLR3
+   670 A3D1 A9 A0 8D 03 D0		mva #$A0 HPosP3
+   671 					
+   672 A3D6 A9 01 8D 6F 02		mva #$1 GPRIOR
+   673 A3DB 60				rts
+   674 					.endp
+   675
+   676 A3DC			.proc	disable_pmg
+   677 A3DC A9 22 8D 2F 02		mva #34 SDMCTL
+   678 A3E1 A9 00			lda #0
+   679 A3E3 8D 1D D0			sta GRACTL
+   680 A3E6 A0 0C			ldy #$0c
+   681 A3E8			@
+   682 A3E8 99 00 D0			sta $D000,y
+   683 A3EB 88				dey
+   684 A3EC 10 FA			bpl @-
+   685 					
+   686 A3EE A9 00 8D C0 02		mva #$0 PCOLR0
+   687 A3F3 A9 00 8D C1 02		mva #$0 PCOLR1
+   688 A3F8 A9 00 8D C2 02		mva #$0 PCOLR2
+   689 A3FD A9 00 8D C3 02		mva #$0 PCOLR3
+   690 					
+   691 A402 A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
+   692 A408 60				rts
+   693 					.endp
+   694 					
+   695 A409			.proc	hide_pmg_cursor
+   696 A409 A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
+   697 A40F A9 00 8D 1D D0		mva #$0 GRACTL
+   698 A414 60				rts
+   699 					.endp
+   700 					
+   701 A415			.proc	draw_pmg_cursor
+   702 A415 A5 14 C5 14 F0 FC		lda:cmp:req 20	; wait vbl
+   703 A41B A9 03 8D 1D D0		mva #$3 GRACTL
+   704 A420 A9 00			lda #0 ; clear pmg memory
+   705 A422 A0 7F			ldy #127
+   706 A424 99 00 0A		@	sta Player0Data,y
+   707 A427 99 80 0A			sta Player1Data,y
+   708 A42A 99 00 0B			sta Player2Data,y
+   709 A42D 99 80 0B			sta Player3Data,y
+   710 A430 88				dey
+   711 A431 10 F1			bpl @-
+   712
+   713 A433 A9 0C			lda #$C ; offset row 0
+   714 A435 A4 83			ldy cur_ypos
+   715 A437 18				clc
+   716 A438 69 04		@	adc #4	; skip character lines
+   717 A43A 88				dey
+   718 A43B 10 FB			bpl @-
+   719 A43D A8				tay
+   720 					
+   721 A43E A9 FF			lda #$FF ; draw
+   722 A440 A2 03			ldx #3
+   723 A442 99 00 0A		@	sta Player0Data,y
+   724 A445 99 80 0A			sta Player1Data,y
+   725 A448 99 00 0B			sta Player2Data,y
+   726 A44B 99 80 0B			sta Player3Data,y
+   727 A44E C8				iny
+   728 A44F CA				dex
+   729 A450 10 F0			bpl @-
+   730 A452 60				rts
+   731 					.endp
+   732
+   733 A453			.proc	display_boot_screen
+   734 A453 A9 00 85 92			mva #0 text_out_x
+   735 A457 A9 00 85 94			mva #0 text_out_y
+   736 A45B A9 8E 85 96 A9 A6 + 	mwa #menu_text1 text_out_ptr
+   737 A463 A9 28 85 98			mva #(.len menu_text1) text_out_len
+   738 A467 20 6C A5			jsr output_text_internal
+   739 A46A E6 94			inc text_out_y
+   740 A46C A9 B6 85 96 A9 A6 + 	mwa #menu_text2 text_out_ptr
+   741 A474 A9 28 85 98			mva #(.len menu_text2) text_out_len
+   742 A478 20 6C A5			jsr output_text_internal
+   743 A47B E6 94			inc text_out_y
+   744 A47D A9 DE 85 96 A9 A6 + 	mwa #menu_text3 text_out_ptr
+   745 A485 A9 28 85 98			mva #(.len menu_text3) text_out_len
+   746 A489 20 6C A5			jsr output_text_internal
+   747 A48C E6 94			inc text_out_y
+   748 A48E A9 06 85 96 A9 A7 + 	mwa #menu_text4 text_out_ptr
+   749 A496 A9 28 85 98			mva #(.len menu_text4) text_out_len
+   750 A49A 20 6C A5			jsr output_text_internal
+   751 A49D E6 94			inc text_out_y
+   752 A49F A9 2E 85 96 A9 A7 + 	mwa #menu_text5 text_out_ptr
+   753 A4A7 A9 28 85 98			mva #(.len menu_text5) text_out_len
+   754 A4AB 20 6C A5			jsr output_text_internal
+   755 A4AE A9 17 85 94			mva #23 text_out_y
+   756 A4B2 A9 56 85 96 A9 A7 + 	mwa #menu_text_bottom text_out_ptr
+   757 A4BA A9 28 85 98			mva #(.len menu_text_bottom) text_out_len
+   758 A4BE 20 E2 A5			jsr output_text_inverted
+   759 A4C1 60				rts
+   760 					.endp
+   761
+   762 A4C2			.proc	output_header_text
+   763 A4C2 A9 09 85 92			mva #9 text_out_x
+   764 A4C6 A9 05 85 94			mva #DIR_START_ROW-2 text_out_y
+   765 A4CA A5 87			lda search_results_mode
+   766 A4CC D0 0F			bne _2
+   767 A4CE A9 7E 85 96 A9 A7 + _1	mwa #directory_text text_out_ptr
+   768 A4D6 A9 14 85 98			mva #(.len directory_text) text_out_len
+   769 A4DA 4C E9 A4			jmp out
+   770 A4DD A9 92 85 96 A9 A7 + _2	mwa #search_results_text text_out_ptr
+   771 A4E5 A9 14 85 98			mva #(.len search_results_text) text_out_len
+   772 A4E9 20 E2 A5		out	jsr output_text_inverted
+   773 A4EC 60				rts
+   774 					.endp
+   775
+   776 A4ED			.proc	output_empty_dir_msg
+   777 A4ED A9 06 85 92			mva #6 text_out_x
+   778 A4F1 A9 08 85 94			mva #DIR_START_ROW+1 text_out_y
+   779 A4F5 A9 64 85 96 A9 A8 + 	mwa #empty_dir_text text_out_ptr
+   780 A4FD A9 19 85 98			mva #(.len empty_dir_text) text_out_len
+   781 A501 20 A0 A5			jsr output_text
+   782 A504 60				rts
+   783 					.endp
+   784
+   785 A505			.proc	output_searching_msg
+   786 A505 A9 0C 85 92			mva #12 text_out_x
+   787 A509 A9 09 85 94			mva #9 text_out_y
+   788 A50D A9 7D 85 96 A9 A8 + 	mwa #searching_text text_out_ptr
+   789 A515 A9 0D 85 98			mva #(.len searching_text) text_out_len
+   790 A519 20 A0 A5			jsr output_text
+   791 A51C 60				rts
+   792 					.endp
+   793
+   794 A51D			.proc	output_search_box
+   795 A51D 20 09 A4			jsr hide_pmg_cursor
+   796 A520 A9 08 85 92			mva #8 text_out_x
+   797 A524 A9 08 85 94			mva #8 text_out_y
+   798 A528 A9 18 85 96 A9 A8 + 	mwa #search_text1 text_out_ptr
+   799 A530 A9 18 85 98			mva #(.len search_text1) text_out_len
+   800 A534 20 6C A5			jsr output_text_internal
+   801 A537 E6 94			inc text_out_y
+   802 A539 A9 30 85 96 A9 A8 + 	mwa #search_text2 text_out_ptr
+   803 A541 A9 18 85 98			mva #(.len search_text2) text_out_len
+   804 A545 20 6C A5			jsr output_text_internal
+   805 A548 E6 94			inc text_out_y
+   806 A54A A9 48 85 96 A9 A8 + 	mwa #search_text3 text_out_ptr
+   807 A552 A9 18 85 98			mva #(.len search_text3) text_out_len
+   808 A556 20 6C A5			jsr output_text_internal
+   809 A559 60				rts
+   810 					.endp
+   811
+   812 					
+   813 A55A			.proc	wait_key
+   814 A55A A9 FF 8D FC 02		mva #$FF CH		; set last key pressed to none
+   815 A55F AE FC 02		@	ldx CH
+   816 A562 E0 FF			cpx #$FF
+   817 A564 F0 F9			beq @-
+   818 A566 A9 FF 8D FC 02		mva #$FF CH
+   819 A56B 60				rts
+   820 					.endp
+   821
+   822 				; output text in text_out_ptr at (cur_x, cur_y)
+   823 A56C			.proc	output_text_internal
+   824 A56C A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
+   825 				; add the cursor y offset
+   826 A574 A4 94			ldy text_out_y
+   827 A576 88			yloop	dey
+   828 A577 30 0E			bmi yend
+   829 A579 18 A5 90 69 28 85 + 	adw tmp_ptr #40
+   830 A584 4C 76 A5			jmp yloop
+   831 A587 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
+   832 				; text output loop
+   833 A594 A0 00			ldy #0
+   834 A596			nextchar ; text output loop
+   835 A596 B1 96			lda (text_out_ptr),y
+   836 A598 91 90			sta (tmp_ptr),y
+   837 A59A C8				iny
+   838 A59B C4 98			cpy text_out_len
+   839 A59D D0 F7			bne nextchar
+   840 A59F			endoftext	
+   841 A59F 60				rts
+   842 					.endp
+   843
+   844 				; output text in text_out_ptr at (cur_x, cur_y)
+   845 A5A0			.proc	output_text
+   846 A5A0 A5 98			lda text_out_len
+   847 A5A2 D0 01			bne ok
+   848 A5A4 60				rts
+   849 A5A5 A5 58 85 90 A5 59 + ok	mwa sm_ptr tmp_ptr
+   850 				; add the cursor y offset
+   851 A5AD A4 94			ldy text_out_y
+   852 A5AF 88			yloop	dey
+   853 A5B0 30 0E			bmi yend
+   854 A5B2 18 A5 90 69 28 85 + 	adw tmp_ptr #40
+   855 A5BD 4C AF A5			jmp yloop
+   856 A5C0 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
+   857 				; text output loop
+   858 A5CD A0 00			ldy #0
+   859 A5CF			nextchar ; text output loop
+   860 A5CF B1 96			lda (text_out_ptr),y
+   861 A5D1 F0 0E			beq endoftext ; end of line?
+   862 A5D3 C9 60			cmp #96; convert ascii->internal
+   863 A5D5 B0 03			bcs lower
+   864 A5D7 38				sec
+   865 A5D8 E9 20			sbc #32
+   866 A5DA 91 90		lower	sta (tmp_ptr),y
+   867 A5DC C8				iny
+   868 A5DD C4 98			cpy text_out_len
+   869 A5DF D0 EE			bne nextchar
+   870 A5E1			endoftext	
+   871 A5E1 60				rts
+   872 					.endp
+   873
+   874 				; output text in text_out_ptr at (cur_x, cur_y)
+   875 A5E2			output_text_inverted .proc 
+   876 A5E2 A5 58 85 90 A5 59 + 	mwa sm_ptr tmp_ptr
+   877 				; add the cursor y offset
+   878 A5EA A4 94			ldy text_out_y
+   879 A5EC 88			yloop	dey
+   880 A5ED 30 0E			bmi yend
+   881 A5EF 18 A5 90 69 28 85 + 	adw tmp_ptr #40
+   882 A5FA 4C EC A5			jmp yloop
+   883 A5FD 18 A5 92 65 90 85 + yend	adw text_out_x tmp_ptr tmp_ptr ; add the cursor x offset
+   884 				; text output loop
+   885 A60A A0 00			ldy #0
+   886 A60C			nextchar ; text output loop
+   887 A60C B1 96			lda (text_out_ptr),y
+   888 A60E F0 10			beq endoftext ; end of line?
+   889 A610 C9 60			cmp #96; convert ascii->internal
+   890 A612 B0 03			bcs lower
+   891 A614 38				sec
+   892 A615 E9 20			sbc #32
+   893 A617 09 80		lower	ora #$80
+   894 A619 91 90			sta (tmp_ptr),y
+   895 A61B C8				iny
+   896 A61C C4 98			cpy text_out_len
+   897 A61E D0 EC			bne nextchar
+   898 A620			endoftext	
+   899 A620 60				rts
+   900 					.endp
+   901
+   902 A621			.proc	copy_wait_for_cart
+   903 A621 A0 0B			ldy #.len[WaitForCartCode]
+   904 A623			@
+   905 A623 B9 2C A6			lda WaitForCartCode-1,y
+   906 A626 99 1F 06			sta wait_for_cart-1,y
+   907 A629 88				dey
+   908 A62A D0 F7			bne @-
+   909 A62C 60				rts
+   910 					.endp
+   911 					
+   912 				; cmd is in Accumulator
+   913 A62D			.proc WaitForCartCode
+   914 A62D 8D DF D5			sta $D5DF	; send cmd to the cart
+   915 A630 AD 00 D5		@	lda $D500
+   916 A633 C9 11			cmp #$11	; wait for the cart to signal it's back
+   917 A635 D0 F9			bne @-
+   918 A637 60				rts
+   919 					.endp
+   920
+   921 A638			.proc	copy_reboot_to_selected_cart
+   922 A638 A0 09			ldy #.len[RebootToSelectedCartCode]
+   923 A63A			@
+   924 A63A B9 43 A6			lda RebootToSelectedCartCode-1,y
+   925 A63D 99 2F 06			sta reboot_to_selected_cart-1,y
+   926 A640 88				dey
+   927 A641 D0 F7			bne @-
+   928 A643 60				rts
+   929 					.endp
+   930 					
+   931 A644			.proc RebootToSelectedCartCode
+   932 A644 78				sei				; prevent GINTLK check in deferred vbi
+   933 A645 A9 FF			lda #CART_CMD_ACTIVATE_CART	; tell the cart we're ready for it switch ROM
+   934 A647 8D DF D5			sta $D5DF
+   935 A64A 4C 77 E4			jmp COLDSV
+   936 					.endp
+   937
+   938 				; ************************ XEX LOADER ****************************
+   939
+   940 A64D			.proc copy_XEX_loader
+   941 A64D A9 91 85 43 A9 A9 + 	mwa #LoaderCodeStart ptr1
+   942 A655 A9 00 85 45 A9 07 + 	mwa #LoaderAddress ptr2
+   943 A65D A9 FF 85 47 A9 01 + 	mwa #[EndLoaderCode-LoaderCode] ptr3
+   944 A665 4C 68 A6			jmp UMove
+   945 					.endp
+   946 					
+   947 				; Move bytes from ptr1 to ptr2, length ptr3
+   948 A668			.proc UMove
+   949 A668 A5 47			lda ptr3
+   950 A66A 49 FF			eor #$FF
+   951 A66C 69 01			adc #1
+   952 A66E 85 47			sta ptr3
+   953 A670 A5 48			lda ptr3+1
+   954 A672 49 FF			eor #$FF
+   955 A674 69 00			adc #0
+   956 A676 85 48			sta ptr3+1
+   957 					
+   958 A678 A0 00			ldy #0
+   959 A67A			Loop
+   960 A67A B1 43			lda (ptr1),y
+   961 A67C 91 45			sta (ptr2),y
+   962 A67E C8				iny
+   963 A67F D0 04			bne @+
+   964 A681 E6 44			inc ptr1+1
+   965 A683 E6 46			inc ptr2+1
+   966 A685			@
+   967 A685 E6 47			inc ptr3
+   968 A687 D0 F1			bne Loop
+   969 A689 E6 48			inc ptr3+1
+   970 A68B D0 ED			bne Loop
+   971 A68D 60				rts
+   972 					.endp
+   973
+   974
+   975 				; ************************ DATA ****************************
+   976 A68E				.local menu_text1
+   977 A68E 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,87,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
+   978 					.endl
+   979 A6B6				.local menu_text2
+   980 A6B6 7C 80 00 80 00 80 + 	.byte 124,128,0,128,0,128,128,74,0,128,128,74," CART",124,"  ROM/CAR/XEX<=128k  ",124
+   981 					.endl
+   982 A6DE				.local menu_text3
+   983 A6DE 7C 80 00 80 00 80 + 	.byte 124,128,0,128,0,128,0,128,0,128,0,128,81,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,68
+   984 					.endl
+   985 A706				.local menu_text4
+   986 A706 7C CA 80 80 00 80 + 	.byte 124,202,128,128,0,128,0,128,0,202,128,128,124,"v1.2 Electrotrains/FJC '16", 124
+   987 					.endl
+   988 A72E				.local menu_text5
+   989 A72E 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,88,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,67
    990 					.endl
-   991 A7C0				.local error_text2
-   992 A7C0 7C 25 72 72 6F 72 + 	.byte 124,"Error:",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,124
+   991 A756				.local menu_text_bottom
+   992 A756 43 75 72 55 70 2F + 	.byte 'CurUp/Dn/Retn=Sel B=Back X=Boot Esc=Find'
    993 					.endl
-   994 A7E6				.local error_text3
-   995 A7E6 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,"P"+$80,"r"+$80,"e"+$80,"s"+$80,"s"+$80," "+$80,"a"+$80," "+$80,"k"+$80,"e"+$80,"y"+$80,67
+   994 A77E				.local directory_text
+   995 A77E 5B 44 69 72 65 63 + 	.byte '[Directory contents]'
    996 					.endl
-   997 					
-   998 A80C				.local search_text1
-   999 A80C 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
-  1000 					.endl
-  1001 A824				.local search_text2
-  1002 A824 7C 33 65 61 72 63 + 	.byte 124,"Search:",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,124
+   997 A792				.local search_results_text
+   998 A792 5B 20 20 53 65 61 + 	.byte '[  Search results  ]'
+   999 					.endl
+  1000 					
+  1001 A7A6				.local error_text1
+  1002 A7A6 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
   1003 					.endl
-  1004 A83C				.local search_text3
-  1005 A83C 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,82,"E"+$80,"S"+$80,"C"+$80," "+$80,"C"+$80,"a"+$80,"n"+$80,"c"+$80,"e"+$80,"l"+$80,67
+  1004 A7CC				.local error_text2
+  1005 A7CC 7C 25 72 72 6F 72 + 	.byte 124,"Error:",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,124
   1006 					.endl
-  1007 					
-  1008 A854				.local folder_text
-  1009 A854 44 49 52 00			.byte 'DIR',0
-  1010 					.endl
-  1011 					
-  1012 A858				.local empty_dir_text
-  1013 A858 4E 6F 20 76 61 6C + 	.byte 'No valid files to display'
-  1014 					.endl
-  1015 					
-  1016 A871				.local searching_text
-  1017 A871 53 65 61 72 63 68 + 	.byte 'Searching....'
-  1018 					.endl
-  1019 					
-  1020 A87E				.local cursor_text
-  1021 A87E 20				.byte ' '
-  1022 					.endl
-  1023 					
-  1024 A87F				.local test_text
-  1025 A87F 48 65 6C 6C 6F 00		.byte 'Hello',0
-  1026 					.endl
-  1027 A885			scancodes
-  1028 A885 6C 6A 3B 8A 8B 6B + 	ins 'keytable.bin'
-  1029 					
-  1030 					
-  1031 A985			LoaderCodeStart
-  1032
-  1033 					opt f-
-  1034 A985				org LoaderAddress
-  1035 					opt f+
+  1007 A7F2				.local error_text3
+  1008 A7F2 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,"P"+$80,"r"+$80,"e"+$80,"s"+$80,"s"+$80," "+$80,"a"+$80," "+$80,"k"+$80,"e"+$80,"y"+$80,67
+  1009 					.endl
+  1010 					
+  1011 A818				.local search_text1
+  1012 A818 51 52 52 52 52 52 + 	.byte 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,82,69
+  1013 					.endl
+  1014 A830				.local search_text2
+  1015 A830 7C 33 65 61 72 63 + 	.byte 124,"Search:",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,124
+  1016 					.endl
+  1017 A848				.local search_text3
+  1018 A848 5A 52 52 52 52 52 + 	.byte 90,82,82,82,82,82,82,82,82,82,82,82,82,"E"+$80,"S"+$80,"C"+$80," "+$80,"C"+$80,"a"+$80,"n"+$80,"c"+$80,"e"+$80,"l"+$80,67
+  1019 					.endl
+  1020 					
+  1021 A860				.local folder_text
+  1022 A860 44 49 52 00			.byte 'DIR',0
+  1023 					.endl
+  1024 					
+  1025 A864				.local empty_dir_text
+  1026 A864 4E 6F 20 76 61 6C + 	.byte 'No valid files to display'
+  1027 					.endl
+  1028 					
+  1029 A87D				.local searching_text
+  1030 A87D 53 65 61 72 63 68 + 	.byte 'Searching....'
+  1031 					.endl
+  1032 					
+  1033 A88A				.local cursor_text
+  1034 A88A 20				.byte ' '
+  1035 					.endl
   1036 					
-  1037 0700			LoaderCode
-  1038 0700 4C				.byte 'L'
-  1039 0701 01				.byte VER_MAJ
-  1040 0702 02				.byte VER_MIN
-  1041
-  1042 0703				.proc LoadBinaryFile
-  1043 0703 20 3B 08			jsr InitLoader
-  1044 0706			Loop
-  1045 0706 A9 38 8D E2 02 A9 + 	mwa #Return IniVec	; reset init vector
-  1046 0710 20 3C 07			jsr ReadBlock
-  1047 0713 30 20			bmi Error
-  1048 0715 AD E1 02 C9 07 D0 + 	cpw RunVec #Return
-  1049 0721 D0 0C			bne @+
-  1050 0723 AD 37 08 8D E0 02 + 	mwa BStart RunVec	; set run address to start of first block
-  1051 072F			@
-  1052 072F 20 39 07			jsr DoInit
-  1053 0732 4C 06 07			jmp Loop
-  1054 0735			Error
-  1055 0735 6C E0 02			jmp (RunVec)
-  1056 0738			Return
-  1057 0738 60				rts
-  1058 					.endp
-  1059 					
-  1060 					
-  1061 				//
-  1062 				//	Jump through init vector
-  1063 				//
-  1064 					
-  1065 0739				.proc DoInit
-  1066 0739 6C E2 02			jmp (IniVec)
-  1067 					.endp
-  1068
-  1069
-  1070 				//
-  1071 				//	Read block from executable
-  1072 				//
-  1073
-  1074 073C				.proc ReadBlock
-  1075 073C 20 8A 07			jsr ReadWord
-  1076 073F 30 48			bmi Error
-  1077 0741 AD 35 08			lda HeaderBuf
-  1078 0744 2D 36 08			and HeaderBuf+1
-  1079 0747 C9 FF			cmp #$ff
-  1080 0749 D0 05			bne NoSignature
-  1081 074B 20 8A 07			jsr ReadWord
-  1082 074E 30 39			bmi Error
-  1083 0750			NoSignature
-  1084 0750 AD 35 08 8D 37 08 + 	mwa HeaderBuf BStart
-  1085 075C 20 8A 07			jsr ReadWord
-  1086 075F 30 28			bmi Error
-  1087 0761 38 AD 35 08 ED 37 + 	sbw HeaderBuf BStart BLen
-  1088 0774 EE 39 08 D0 03 EE + 	inw BLen
-  1089 077C AD 37 08 85 43 AD + 	mwa BStart IOPtr
-  1090 0786 20 9C 07			jsr ReadBuffer
-  1091 0789			Error
-  1092 0789 60				rts
-  1093 					.endp
-  1094 					
-  1095 					
-  1096 					
-  1097 					
-  1098 				//
-  1099 				//	Read word from XEX
-  1100 				//
-  1101
-  1102 078A				.proc ReadWord
-  1103 078A A9 35 85 43 A9 08 + 	mwa #HeaderBuf IOPtr
-  1104 0792 A9 02 8D 39 08 A9 + 	mwa #2 BLen		; fall into ReadBuffer
-  1105 					.endp
-  1106
-  1107
-  1108
-  1109 				//
-  1110 				//	Read buffer from XEX
-  1111 				//	Returns Z=1 on EOF
-  1112 				//
-  1113 					
-  1114 079C				.proc ReadBuffer
-  1115 079C 20 22 08			jsr SetSegment
-  1116 079F			Loop
-  1117 079F AD 39 08			lda BLen
-  1118 07A2 0D 3A 08			ora BLen+1
-  1119 07A5 F0 75			beq Done
-  1120 					
-  1121 07A7 A5 45			lda FileSize		; first ensure we're not at the end of the file
-  1122 07A9 05 46			ora FileSize+1
-  1123 07AB 05 47			ora FileSize+2
-  1124 07AD 05 48			ora FileSize+3
-  1125 07AF F0 6E			beq EOF
-  1126
-  1127 07B1 EE F3 07			inc BufIndex
-  1128 07B4 D0 3C			bne NoBurst			; don't burst unless we're at the end of the buffer
-  1129 					
-  1130 07B6			BurstLoop
-  1131 07B6 EE 23 08			inc SegmentLo			; bump segment if we reached end of buffer
-  1132 07B9 D0 03			bne @+
-  1133 07BB EE 25 08			inc SegmentHi
-  1134 07BE			@
-  1135 07BE 20 22 08			jsr SetSegment
-  1136
-  1137 07C1 AD 3A 08			lda Blen+1		; see if we can burst read the next 256 bytes
-  1138 07C4 F0 2C			beq NoBurst
-  1139 07C6 A5 46			lda FileSize+1	; ensure buffer and remaining bytes in file are both >= 256
-  1140 07C8 05 47			ora FileSize+2
-  1141 07CA 05 48			ora FileSize+3
-  1142 07CC F0 24			beq NoBurst
-  1143
-  1144 07CE A0 00			ldy #0			; read a whole page into RAM
-  1145 07D0			@
-  1146 07D0 B9 00 D5			lda $D500,y		; doesn't matter about speculative reads (?)
-  1147 07D3 91 43			sta (IOPtr),y
-  1148 07D5 C8				iny
-  1149 07D6 D0 F8			bne @-
-  1150 07D8 E6 44			inc IOPtr+1		; bump address for next time
-  1151
-  1152 07DA A2 03			ldx #3			; y is already 0
-  1153 07DC 38				sec
-  1154 07DD			@
-  1155 07DD B9 45 00			lda FileSize,y	; reduce file size by 256
-  1156 07E0 F9 31 08			sbc L256,y
-  1157 07E3 99 45 00			sta FileSize,y
-  1158 07E6 C8				iny
-  1159 07E7 CA				dex
-  1160 07E8 10 F3			bpl @-
-  1161 07EA CE 3A 08			dec Blen+1		; reduce buffer length by 256
-  1162 07ED CE F3 07			dec BufIndex
-  1163 07F0 D0 AA			bne ReadBuffer
+  1037 A88B				.local test_text
+  1038 A88B 48 65 6C 6C 6F 00		.byte 'Hello',0
+  1039 					.endl
+  1040 A891			scancodes
+  1041 A891 6C 6A 3B 8A 8B 6B + 	ins 'keytable.bin'
+  1042 					
+  1043 					
+  1044 A991			LoaderCodeStart
+  1045
+  1046 					opt f-
+  1047 A991				org LoaderAddress
+  1048 					opt f+
+  1049 					
+  1050 0700			LoaderCode
+  1051 0700 4C				.byte 'L'
+  1052 0701 01				.byte VER_MAJ
+  1053 0702 02				.byte VER_MIN
+  1054
+  1055 0703				.proc LoadBinaryFile
+  1056 0703 20 3B 08			jsr InitLoader
+  1057 0706			Loop
+  1058 0706 A9 38 8D E2 02 A9 + 	mwa #Return IniVec	; reset init vector
+  1059 0710 20 3C 07			jsr ReadBlock
+  1060 0713 30 20			bmi Error
+  1061 0715 AD E1 02 C9 07 D0 + 	cpw RunVec #Return
+  1062 0721 D0 0C			bne @+
+  1063 0723 AD 37 08 8D E0 02 + 	mwa BStart RunVec	; set run address to start of first block
+  1064 072F			@
+  1065 072F 20 39 07			jsr DoInit
+  1066 0732 4C 06 07			jmp Loop
+  1067 0735			Error
+  1068 0735 6C E0 02			jmp (RunVec)
+  1069 0738			Return
+  1070 0738 60				rts
+  1071 					.endp
+  1072 					
+  1073 					
+  1074 				//
+  1075 				//	Jump through init vector
+  1076 				//
+  1077 					
+  1078 0739				.proc DoInit
+  1079 0739 6C E2 02			jmp (IniVec)
+  1080 					.endp
+  1081
+  1082
+  1083 				//
+  1084 				//	Read block from executable
+  1085 				//
+  1086
+  1087 073C				.proc ReadBlock
+  1088 073C 20 8A 07			jsr ReadWord
+  1089 073F 30 48			bmi Error
+  1090 0741 AD 35 08			lda HeaderBuf
+  1091 0744 2D 36 08			and HeaderBuf+1
+  1092 0747 C9 FF			cmp #$ff
+  1093 0749 D0 05			bne NoSignature
+  1094 074B 20 8A 07			jsr ReadWord
+  1095 074E 30 39			bmi Error
+  1096 0750			NoSignature
+  1097 0750 AD 35 08 8D 37 08 + 	mwa HeaderBuf BStart
+  1098 075C 20 8A 07			jsr ReadWord
+  1099 075F 30 28			bmi Error
+  1100 0761 38 AD 35 08 ED 37 + 	sbw HeaderBuf BStart BLen
+  1101 0774 EE 39 08 D0 03 EE + 	inw BLen
+  1102 077C AD 37 08 85 43 AD + 	mwa BStart IOPtr
+  1103 0786 20 9C 07			jsr ReadBuffer
+  1104 0789			Error
+  1105 0789 60				rts
+  1106 					.endp
+  1107 					
+  1108 					
+  1109 					
+  1110 					
+  1111 				//
+  1112 				//	Read word from XEX
+  1113 				//
+  1114
+  1115 078A				.proc ReadWord
+  1116 078A A9 35 85 43 A9 08 + 	mwa #HeaderBuf IOPtr
+  1117 0792 A9 02 8D 39 08 A9 + 	mwa #2 BLen		; fall into ReadBuffer
+  1118 					.endp
+  1119
+  1120
+  1121
+  1122 				//
+  1123 				//	Read buffer from XEX
+  1124 				//	Returns Z=1 on EOF
+  1125 				//
+  1126 					
+  1127 079C				.proc ReadBuffer
+  1128 079C 20 22 08			jsr SetSegment
+  1129 079F			Loop
+  1130 079F AD 39 08			lda BLen
+  1131 07A2 0D 3A 08			ora BLen+1
+  1132 07A5 F0 75			beq Done
+  1133 					
+  1134 07A7 A5 45			lda FileSize		; first ensure we're not at the end of the file
+  1135 07A9 05 46			ora FileSize+1
+  1136 07AB 05 47			ora FileSize+2
+  1137 07AD 05 48			ora FileSize+3
+  1138 07AF F0 6E			beq EOF
+  1139
+  1140 07B1 EE F3 07			inc BufIndex
+  1141 07B4 D0 3C			bne NoBurst			; don't burst unless we're at the end of the buffer
+  1142 					
+  1143 07B6			BurstLoop
+  1144 07B6 EE 23 08			inc SegmentLo			; bump segment if we reached end of buffer
+  1145 07B9 D0 03			bne @+
+  1146 07BB EE 25 08			inc SegmentHi
+  1147 07BE			@
+  1148 07BE 20 22 08			jsr SetSegment
+  1149
+  1150 07C1 AD 3A 08			lda Blen+1		; see if we can burst read the next 256 bytes
+  1151 07C4 F0 2C			beq NoBurst
+  1152 07C6 A5 46			lda FileSize+1	; ensure buffer and remaining bytes in file are both >= 256
+  1153 07C8 05 47			ora FileSize+2
+  1154 07CA 05 48			ora FileSize+3
+  1155 07CC F0 24			beq NoBurst
+  1156
+  1157 07CE A0 00			ldy #0			; read a whole page into RAM
+  1158 07D0			@
+  1159 07D0 B9 00 D5			lda $D500,y		; doesn't matter about speculative reads (?)
+  1160 07D3 91 43			sta (IOPtr),y
+  1161 07D5 C8				iny
+  1162 07D6 D0 F8			bne @-
+  1163 07D8 E6 44			inc IOPtr+1		; bump address for next time
   1164
-  1165 07F2			NoBurst
-  1166 07F2 AD 00 D5			lda $D500
-  1167 = 07F3			BufIndex	equ *-2
-  1168 07F5 A0 00			ldy #0
-  1169 07F7 91 43			sta (IOPtr),y
-  1170 07F9 E6 43 D0 02 E6 44		inw IOPtr
-  1171 07FF AD 39 08 D0 03 CE + 	dew BLen
-  1172 					
-  1173 080A A2 03			ldx #3		; y is already 0
-  1174 080C 38				sec
-  1175 080D			@
-  1176 080D B9 45 00			lda FileSize,y
-  1177 0810 F9 2D 08			sbc L1,y
-  1178 0813 99 45 00			sta FileSize,y
-  1179 0816 C8				iny
-  1180 0817 CA				dex
-  1181 0818 10 F3			bpl @-
-  1182 081A 30 83			bmi Loop
-  1183 					
-  1184 081C			Done
-  1185 081C A0 01			ldy #1
-  1186 081E 60				rts
-  1187 081F			EOF
-  1188 081F A0 88			ldy #IOErr.EOF
-  1189 0821 60				rts
-  1190 					
-  1191 0822			SetSegment
-  1192 0822 A0 00			ldy #0
-  1193 = 0823			SegmentLo equ *-1
-  1194 0824 A2 00			ldx #0
-  1195 = 0825			SegmentHi equ *-1
-  1196 0826 8C 00 D5			sty $D500
-  1197 0829 8E 01 D5			stx $D501
-  1198 082C 60				rts
-  1199 082D			L1
-  1200 082D 01 00 00 00			.dword 1
-  1201 0831			L256
-  1202 0831 00 01 00 00			.dword 256
-  1203 					.endp
-  1204
-  1205
-  1206 0835 00 00		HeaderBuf	.word 0
-  1207 0837 00 00		BStart		.word 0
-  1208 0839 00 00		BLen		.word 0
-  1209
-  1210
-  1211
-  1212 				; Everything beyond here can be obliterated safely during the load
-  1213 					
-  1214 				//
-  1215 				//	Loader initialisation
-  1216 				//
-  1217 					
-  1218 083B				.proc InitLoader
-  1219 083B 78				sei
-  1220 083C A9 FF			lda #CART_CMD_ACTIVATE_CART
-  1221 083E 8D DF D5			sta $D5DF
+  1165 07DA A2 03			ldx #3			; y is already 0
+  1166 07DC 38				sec
+  1167 07DD			@
+  1168 07DD B9 45 00			lda FileSize,y	; reduce file size by 256
+  1169 07E0 F9 31 08			sbc L256,y
+  1170 07E3 99 45 00			sta FileSize,y
+  1171 07E6 C8				iny
+  1172 07E7 CA				dex
+  1173 07E8 10 F3			bpl @-
+  1174 07EA CE 3A 08			dec Blen+1		; reduce buffer length by 256
+  1175 07ED CE F3 07			dec BufIndex
+  1176 07F0 D0 AA			bne ReadBuffer
+  1177
+  1178 07F2			NoBurst
+  1179 07F2 AD 00 D5			lda $D500
+  1180 = 07F3			BufIndex	equ *-2
+  1181 07F5 A0 00			ldy #0
+  1182 07F7 91 43			sta (IOPtr),y
+  1183 07F9 E6 43 D0 02 E6 44		inw IOPtr
+  1184 07FF AD 39 08 D0 03 CE + 	dew BLen
+  1185 					
+  1186 080A A2 03			ldx #3		; y is already 0
+  1187 080C 38				sec
+  1188 080D			@
+  1189 080D B9 45 00			lda FileSize,y
+  1190 0810 F9 2D 08			sbc L1,y
+  1191 0813 99 45 00			sta FileSize,y
+  1192 0816 C8				iny
+  1193 0817 CA				dex
+  1194 0818 10 F3			bpl @-
+  1195 081A 30 83			bmi Loop
+  1196 					
+  1197 081C			Done
+  1198 081C A0 01			ldy #1
+  1199 081E 60				rts
+  1200 081F			EOF
+  1201 081F A0 88			ldy #IOErr.EOF
+  1202 0821 60				rts
+  1203 					
+  1204 0822			SetSegment
+  1205 0822 A0 00			ldy #0
+  1206 = 0823			SegmentLo equ *-1
+  1207 0824 A2 00			ldx #0
+  1208 = 0825			SegmentHi equ *-1
+  1209 0826 8C 00 D5			sty $D500
+  1210 0829 8E 01 D5			stx $D501
+  1211 082C 60				rts
+  1212 082D			L1
+  1213 082D 01 00 00 00			.dword 1
+  1214 0831			L256
+  1215 0831 00 01 00 00			.dword 256
+  1216 					.endp
+  1217
+  1218
+  1219 0835 00 00		HeaderBuf	.word 0
+  1220 0837 00 00		BStart		.word 0
+  1221 0839 00 00		BLen		.word 0
   1222
-  1223 0841 20 8E 08			jsr SetGintlk
-  1224 0844 20 7C 08			jsr BasicOff
-  1225 0847 58				cli
-  1226 0848 20 D6 08			jsr OpenEditor
-  1227 084B A9 FF 8D E7 02 A9 + 	mwa #EndLoaderCode MEMLO
-  1228 0855 A9 38 8D E0 02 A9 + 	mwa #LoadBinaryFile.Return RunVec	; reset run vector
-  1229 085F A0 00			ldy #0
-  1230 0861 98				tya
-  1231 0862			@
-  1232 0862 99 80 00			sta $80,y
-  1233 0865 C8				iny
-  1234 0866 10 FA			bpl @-
-  1235 0868 20 9B 08			jsr ClearRAM
-  1236 					
-  1237 086B A0 03			ldy #3
-  1238 086D			@
-  1239 086D B9 00 D5			lda $D500,y
-  1240 0870 99 45 00			sta FileSize,y
-  1241 0873 88				dey
-  1242 0874 10 F7			bpl @-
-  1243 0876 A9 03 8D F3 07		mva #3 ReadBuffer.BufIndex
-  1244 087B 60				rts
-  1245 					.endp
-  1246
-  1247 					
-  1248 					
-  1249 087C				.proc BASICOff
-  1250 087C A9 01 8D F8 03		mva #$01 $3f8
-  1251 0881 A9 C0 85 6A			mva #$C0 $6A
-  1252 0885 AD 01 D3			lda portb
-  1253 0888 09 02			ora #$02
-  1254 088A 8D 01 D3			sta portb
-  1255 088D 60				rts
-  1256 					.endp
-  1257 					
-  1258 					
+  1223
+  1224
+  1225 				; Everything beyond here can be obliterated safely during the load
+  1226 					
+  1227 				//
+  1228 				//	Loader initialisation
+  1229 				//
+  1230 					
+  1231 083B				.proc InitLoader
+  1232 083B 78				sei
+  1233 083C A9 FF			lda #CART_CMD_ACTIVATE_CART
+  1234 083E 8D DF D5			sta $D5DF
+  1235
+  1236 0841 20 8E 08			jsr SetGintlk
+  1237 0844 20 7C 08			jsr BasicOff
+  1238 0847 58				cli
+  1239 0848 20 D6 08			jsr OpenEditor
+  1240 084B A9 FF 8D E7 02 A9 + 	mwa #EndLoaderCode MEMLO
+  1241 0855 A9 38 8D E0 02 A9 + 	mwa #LoadBinaryFile.Return RunVec	; reset run vector
+  1242 085F A0 00			ldy #0
+  1243 0861 98				tya
+  1244 0862			@
+  1245 0862 99 80 00			sta $80,y
+  1246 0865 C8				iny
+  1247 0866 10 FA			bpl @-
+  1248 0868 20 9B 08			jsr ClearRAM
+  1249 					
+  1250 086B A0 03			ldy #3
+  1251 086D			@
+  1252 086D B9 00 D5			lda $D500,y
+  1253 0870 99 45 00			sta FileSize,y
+  1254 0873 88				dey
+  1255 0874 10 F7			bpl @-
+  1256 0876 A9 03 8D F3 07		mva #3 ReadBuffer.BufIndex
+  1257 087B 60				rts
+  1258 					.endp
   1259
-  1260 088E				.proc SetGintlk
-  1261 088E 8D 0A D4			sta WSYNC
-  1262 0891 8D 0A D4			sta WSYNC
-  1263 0894 AD 13 D0			lda TRIG3
-  1264 0897 8D FA 03			sta GINTLK
-  1265 089A 60				rts
-  1266 					.endp
-  1267 					
-  1268 					
-  1269 					
-  1270 089B				.proc ClearRAM
-  1271 089B A9 FF 85 43 A9 08 + 	mwa #EndLoaderCode ptr1
-  1272 				;	sbw $c000 ptr1 ptr2
-  1273 08A3 38 AD 30 02 E5 43 + 	sbw SDLSTL ptr1 ptr2		; clear up to display list address
-  1274 					
-  1275 08B2 A5 45			lda ptr2
-  1276 08B4 49 FF			eor #$FF
-  1277 08B6 18				clc
-  1278 08B7 69 01			adc #1
-  1279 08B9 85 45			sta ptr2
-  1280 08BB A5 46			lda ptr2+1
-  1281 08BD 49 FF			eor #$FF
-  1282 08BF 69 00			adc #0
-  1283 08C1 85 46			sta ptr2+1
-  1284 08C3 A0 00			ldy #0
-  1285 08C5 98				tya
-  1286 08C6			Loop
-  1287 08C6 91 43			sta (ptr1),y
-  1288 08C8 C8				iny
-  1289 08C9 D0 02			bne @+
-  1290 08CB E6 44			inc ptr1+1
-  1291 08CD			@
-  1292 08CD E6 45			inc ptr2
-  1293 08CF D0 F5			bne Loop
-  1294 08D1 E6 46			inc ptr2+1
-  1295 08D3 D0 F1			bne Loop
-  1296 08D5 60				rts
-  1297 					.endp
-  1298 					
-  1299 					
-  1300 					
-  1301 08D6				.proc OpenEditor
-  1302 08D6 A2 00			ldx #0
-  1303 08D8 A9 0C			lda #$0c
-  1304 08DA 8D 42 03			sta iocb[0].Command
-  1305 08DD 20 56 E4			jsr ciov
-  1306 08E0 A9 FC 8D 44 03 A9 + 	mwa #EName iocb[0].Address
-  1307 08EA A9 0C 8D 4A 03		mva #$0C iocb[0].Aux1
-  1308 08EF A9 00 8D 4B 03		mva #$00 iocb[0].Aux2
-  1309 08F4 A9 03 8D 42 03		mva #$03 iocb[0].Command
-  1310 08F9 4C 56 E4			jmp ciov
-  1311
-  1312 08FC			EName
-  1313 08FC 45 3A 9B			.byte 'E:',$9B
-  1314
-  1315 					.endp
-  1316 					
-  1317
-  1318
-  1319 					.if 0
-  1320 				//
-  1321 				//	Wait for sync
-  1322 				//
-  1323
-  1324 					.proc WaitForSync2
-  1325 					lda VCount
-  1326 					rne
-  1327 					lda VCount
-  1328 					req
-  1329 					rts
-  1330 					.endp
-  1331 					
-  1332 					.endif
-  1333 					
-  1334
-  1335 					
+  1260 					
+  1261 					
+  1262 087C				.proc BASICOff
+  1263 087C A9 01 8D F8 03		mva #$01 $3f8
+  1264 0881 A9 C0 85 6A			mva #$C0 $6A
+  1265 0885 AD 01 D3			lda portb
+  1266 0888 09 02			ora #$02
+  1267 088A 8D 01 D3			sta portb
+  1268 088D 60				rts
+  1269 					.endp
+  1270 					
+  1271 					
+  1272
+  1273 088E				.proc SetGintlk
+  1274 088E 8D 0A D4			sta WSYNC
+  1275 0891 8D 0A D4			sta WSYNC
+  1276 0894 AD 13 D0			lda TRIG3
+  1277 0897 8D FA 03			sta GINTLK
+  1278 089A 60				rts
+  1279 					.endp
+  1280 					
+  1281 					
+  1282 					
+  1283 089B				.proc ClearRAM
+  1284 089B A9 FF 85 43 A9 08 + 	mwa #EndLoaderCode ptr1
+  1285 				;	sbw $c000 ptr1 ptr2
+  1286 08A3 38 AD 30 02 E5 43 + 	sbw SDLSTL ptr1 ptr2		; clear up to display list address
+  1287 					
+  1288 08B2 A5 45			lda ptr2
+  1289 08B4 49 FF			eor #$FF
+  1290 08B6 18				clc
+  1291 08B7 69 01			adc #1
+  1292 08B9 85 45			sta ptr2
+  1293 08BB A5 46			lda ptr2+1
+  1294 08BD 49 FF			eor #$FF
+  1295 08BF 69 00			adc #0
+  1296 08C1 85 46			sta ptr2+1
+  1297 08C3 A0 00			ldy #0
+  1298 08C5 98				tya
+  1299 08C6			Loop
+  1300 08C6 91 43			sta (ptr1),y
+  1301 08C8 C8				iny
+  1302 08C9 D0 02			bne @+
+  1303 08CB E6 44			inc ptr1+1
+  1304 08CD			@
+  1305 08CD E6 45			inc ptr2
+  1306 08CF D0 F5			bne Loop
+  1307 08D1 E6 46			inc ptr2+1
+  1308 08D3 D0 F1			bne Loop
+  1309 08D5 60				rts
+  1310 					.endp
+  1311 					
+  1312 					
+  1313 					
+  1314 08D6				.proc OpenEditor
+  1315 08D6 A2 00			ldx #0
+  1316 08D8 A9 0C			lda #$0c
+  1317 08DA 8D 42 03			sta iocb[0].Command
+  1318 08DD 20 56 E4			jsr ciov
+  1319 08E0 A9 FC 8D 44 03 A9 + 	mwa #EName iocb[0].Address
+  1320 08EA A9 0C 8D 4A 03		mva #$0C iocb[0].Aux1
+  1321 08EF A9 00 8D 4B 03		mva #$00 iocb[0].Aux2
+  1322 08F4 A9 03 8D 42 03		mva #$03 iocb[0].Command
+  1323 08F9 4C 56 E4			jmp ciov
+  1324
+  1325 08FC			EName
+  1326 08FC 45 3A 9B			.byte 'E:',$9B
+  1327
+  1328 					.endp
+  1329 					
+  1330
+  1331
+  1332 					.if 0
+  1333 				//
+  1334 				//	Wait for sync
+  1335 				//
   1336
-  1337 08FF			EndLoaderCode ; end of relocated code
-  1338
-  1339 = 01FF			LoaderCodeSize	= EndLoaderCode-LoaderCode
-  1340 					
-  1341 					opt f-
-  1342 08FF				org LoaderCodeStart + LoaderCodeSize
-  1343 					opt f+
+  1337 					.proc WaitForSync2
+  1338 					lda VCount
+  1339 					rne
+  1340 					lda VCount
+  1341 					req
+  1342 					rts
+  1343 					.endp
   1344 					
-  1345
-  1346 				; ************************ CARTRIDGE CONTROL BLOCK *****************
+  1345 					.endif
+  1346 					
   1347
-  1348 AB84			        org $bffa                 ;Cartridge control block
-  1349 BFFA 01 A0		        .word start               ;CARTCS
-  1350 BFFC 00			        .byte 0                   ;CART
-  1351 BFFD 04			        .byte CARTFG_START_CART   ;CARTFG
-  1352 BFFE 00 A0		        .word init                ;CARTAD
-  1353
+  1348 					
+  1349
+  1350 08FF			EndLoaderCode ; end of relocated code
+  1351
+  1352 = 01FF			LoaderCodeSize	= EndLoaderCode-LoaderCode
+  1353 					
+  1354 					opt f-
+  1355 08FF				org LoaderCodeStart + LoaderCodeSize
+  1356 					opt f+
+  1357 					
+  1358
+  1359 				; ************************ CARTRIDGE CONTROL BLOCK *****************
+  1360
+  1361 AB90			        org $bffa                 ;Cartridge control block
+  1362 BFFA 01 A0		        .word start               ;CARTCS
+  1363 BFFC 00			        .byte 0                   ;CART
+  1364 BFFD 04			        .byte CARTFG_START_CART   ;CARTFG
+  1365 BFFE 00 A0		        .word init                ;CARTAD
+  1366
