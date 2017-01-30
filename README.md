@@ -41,3 +41,4 @@ Credits
 * Design, hardware and firmware by Robin Edwards (electrotrains at atariage)
 * XEX loader and OS modifications by Jonathan Halliday (flashjazzcat at atariage)
 * Altirra LLE OS used with permision from Avery Lee (phaeron at atariage)
+* German translation of user manual by Florian Dingler (FlorianD at atariage)
