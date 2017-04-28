@@ -24,7 +24,7 @@ do some programming in BASIC and save your program back to the ATR file. ATR fil
 Hardware
 --------
 The UnoCart was first designed using a STM32F407 DISCOVERY board. An article describing how to build an UnoCart using
-this board will be published in a future issue of [Excel Magazine](http://excel-retro-mag.co.uk).
+this board was published in [Excel Magazine](http://excel-retro-mag.co.uk) issue #4.
 
 I have also designed a custom PCB for the UnoCart pictured here. If you are interested in an assembled board, please
 contact me on the AtariAge forums (my username is Electrotrains).
