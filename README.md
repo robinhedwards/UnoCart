@@ -27,8 +27,9 @@ The UnoCart was first designed using a STM32F407 DISCOVERY board. An article des
 this board was published in [Excel Magazine](http://excel-retro-mag.co.uk) issue #4. Follow the link to order a copy of the 
 issue in print or PDF.
 
-I have also designed a custom PCB for the UnoCart pictured here. If you are interested in an assembled board, please
-contact me on the AtariAge forums (my username is Electrotrains).
+I have also designed a custom PCB for the UnoCart pictured here. If you are interested in a ready to use cartridge (complete with
+3d printed case) these are currently being produced by Marlin Bates in the USA: [website](http://www.thebrewingacademy.com/)
+or email thebrewingacademy@gmail.com.
 
 ![Bottom/Back of PCB when inserted in Atari](images/board_front.jpg?raw=true)
 ![Top/Front of PCB when inserted in Atari](images/board_back.jpg?raw=true)
@@ -43,3 +44,4 @@ Credits
 * XEX loader and OS modifications by Jonathan Halliday (flashjazzcat at atariage)
 * Altirra LLE OS used with permision from Avery Lee (phaeron at atariage)
 * German translation of user manual by Florian D (FlorianD at atariage)
+* Production by Marlin Bates (MacRorie at atariage)
